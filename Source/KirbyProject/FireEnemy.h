@@ -12,7 +12,7 @@ class KIRBYPROJECT_API AFireEnemy : public AActor
 private:
 	UPROPERTY(VisibleAnywhere)
 		USceneComponent* Root;
-	UPROPERTY(EditDefaultOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "FireEnemy")
 		USkeletalMeshComponent* FireMesh;
 public:	
 	AFireEnemy();
