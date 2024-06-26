@@ -7,7 +7,7 @@
 UCLASS()
 class KIRBYPROJECT_API AFireEnemy : public AActor
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 private:
     UPROPERTY(VisibleAnywhere)

@@ -50,8 +50,8 @@ void AFireEnemy::Fire()
 {
 	if (FireProjectileClass)
 	{
-		FVector FireLocation = FireMesh->GetSocketLocation(FName("Muzzle"));
-		FRotator FireRotation = FireMesh->GetSocketRotation(FName("Muzzle"));
+		FVector FireLocation = FireMesh->GetSocketLocation(FName("FireEnemySocket"));
+		FRotator FireRotation = FireMesh->GetSocketRotation(FName("FireEnemySocket"));
 
 		GetWorld()->SpawnActor<AProjectile>(FireProjectileClass, FireLocation, FireRotation);
 	}
