@@ -41,4 +41,5 @@ public:
 private:
     void CheckFireCondition();
     void Fire();
+    void RotateToPlayer(float DeltaTime);
 };

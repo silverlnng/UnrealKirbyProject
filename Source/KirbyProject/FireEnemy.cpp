@@ -31,6 +31,10 @@ void AFireEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (PlayerPawn) {
+		RotateToPlayer(DeltaTime);  // 매 프레임마다 플레이어를 향해 회전
+	}
+
 }
 
 void AFireEnemy::CheckFireCondition()
@@ -54,5 +58,25 @@ void AFireEnemy::Fire()
 		FRotator FireRotation = FireMesh->GetSocketRotation(FName("FireEnemySocket"));
 
 		GetWorld()->SpawnActor<AProjectile>(FireProjectileClass, FireLocation, FireRotation);
+	}
+}
+
+void AFireEnemy::RotateToPlayer(float DeltaTime)
+{
+	if (PlayerPawn)
+	{
+		FVector Direction = PlayerPawn->GetActorLocation() - GetActorLocation();
+		Direction.Z = 0;  // 수평 회전만 하도록 Z축을 0으로 설정
+
+		if (!Direction.IsNearlyZero())
+		{
+			FRotator TargetRotation = Direction.Rotation();
+			FRotator CurrentRotation = GetActorRotation();
+
+			TargetRotation.Yaw += -90.0f;
+
+			FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 5.0f);  // 회전 속도를 조정할 수 있습니다.
+			SetActorRotation(NewRotation);
+		}
 	}
 }
