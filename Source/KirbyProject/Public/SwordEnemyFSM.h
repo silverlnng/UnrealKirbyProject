@@ -2,45 +2,39 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/ActorComponent.h"
 #include "SwordEnemyFSM.generated.h"
 
 // 사용할 상태 정의
 UENUM(BlueprintType)
-enum class EEnemyState : unit8 
+enum class EEnemyState : uint8 
 {
-	Idle,
-	Move,
-	Attack,
-	Damage,
-	Die,
+	Idle UMETA(DisplayName = "Idle"),
+	Move UMETA(DisplayName = "Move"),
+	Attack UMETA(DisplayName = "Attack"),
+	Damage UMETA(DisplayName = "Damage"),
+	Die UMETA(DisplayName = "Die")
 };
 
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class KIRBYPROJECT_API USwordEnemyFSM : public UActorComponent
 {
 	GENERATED_BODY()
-	
-public:	
-	// Sets default values for this actor's properties
+
+public:
 	USwordEnemyFSM();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
+public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-public:
-	// 상태 변수
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=FSM)
-	EEnemyState mState = EEnemyState::Idle;
-
+private:
 	// 대기 상태
 	void IdleState();
 	//이동 상태
-	void MoveState();
+	void MoveState(float DeltaTime);
 	// 공격 상태
 	void AttackState();
 	// 피격 상태
@@ -48,37 +42,38 @@ public:
 	// 죽음 상태
 	void DieState();
 
+	void CheckPlayerDistance();
+
+public:
+	// 상태 변수
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = FSM)
+	EEnemyState mState = EEnemyState::Idle;
+	
+
 	// 대기 시간
-	UPROPERTY(EditDefaultsOnly, Category=FSM)
-	float idleDelayTime = 2;
+	UPROPERTY(EditDefaultsOnly, Category = FSM)
+	float idleDelayTime = 2.0f;
+
+
+	UPROPERTY(EditDefaultsOnly, Category = FSM)
+    float chaseRange = 600.0f;
+
+    UPROPERTY(EditDefaultsOnly, Category = FSM)
+    float attackRange = 150.0f;
+
 
 	// 경과 시간
-	float currentTime = 0;
+	float currentTime = 0.0f;
 
 	// 타깃
-	UPROPERTY(VisibleAnywhere, Category=FSM)
+	UPROPERTY(VisibleAnywhere, Category = FSM)
 	class AKirbyProjectCharacter* target;
 
 	// 소유 액터
 	UPROPERTY()
 	class ASwordEnemy* me;
 
-	// 공격 범위
-	UPROPERTY(EditAnywhere, Category = FSM)
-	float attackRange = 150.0f;
+	//// 공격 범위
+	//UPROPERTY(EditAnywhere, Category = FSM)
+	//float attackRange = 150.0f;
 };
-
-void USwordEnemyFSM::IdleState() 
-{
-	// 시간이 흘렀으니까
-	currentTime += GetWorld()->DeltaTimeSeconds;
-
-	// 만약 경과 시간이 대기 시간 초과했다면
-	if (currentTime > idleDelayTime) 
-	{
-		// 이동 상태로 전환
-		mState = EEnemyState::Move;
-		// 경과 시간 초기화
-		currentTime = 0;
-	}
-}
