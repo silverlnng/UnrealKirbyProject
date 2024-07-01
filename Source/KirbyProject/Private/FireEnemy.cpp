@@ -16,6 +16,7 @@ AFireEnemy::AFireEnemy()
 
 	FireRange = 1000.0f; // 플레이어가 다가와야 하는 거리
 	FireInterval = 1.0f; // 불을 쏘는 간격
+	Health = 3;  // 초기 체력 설정
 }
 
 void AFireEnemy::BeginPlay()
@@ -79,4 +80,25 @@ void AFireEnemy::RotateToPlayer(float DeltaTime)
 			SetActorRotation(NewRotation);
 		}
 	}
+}
+
+void AFireEnemy::OnHit(int32 Damage)
+{
+	Health -= Damage;
+	if (Health <= 0)
+	{
+		Die();
+	}
+}
+
+void AFireEnemy::Die()
+{
+	if (CoinClass)
+	{
+		FVector SpawnLocation = GetActorLocation();
+		FRotator SpawnRotation = GetActorRotation();
+		GetWorld()->SpawnActor<AActor>(CoinClass, SpawnLocation, SpawnRotation);
+	}
+
+	Destroy();  // 적을 제거
 }

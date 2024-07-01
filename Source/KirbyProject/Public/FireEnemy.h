@@ -25,9 +25,14 @@ private:
     UPROPERTY(EditDefaultsOnly, Category = "FireEnemy")
     TSubclassOf<class AProjectile> FireProjectileClass;
 
+    UPROPERTY(EditDefaultsOnly, Category = "FireEnemy")
+    TSubclassOf<class AActor> CoinClass;  // 코인 클래스 선언
+
     FTimerHandle FireTimerHandle;
 
     APawn* PlayerPawn;
+
+    int32 Health;  // 적의 체력
 
 public:	
 	AFireEnemy();
@@ -37,9 +42,11 @@ protected:
 
 public:	
 	virtual void Tick(float DeltaTime) override;
+    void OnHit(int32 Damage);  // 적이 공격을 받을 때 호출되는 함수
 
 private:
     void CheckFireCondition();
     void Fire();
     void RotateToPlayer(float DeltaTime);
+    void Die();  // 적이 죽을 때 호출되는 함수
 };
