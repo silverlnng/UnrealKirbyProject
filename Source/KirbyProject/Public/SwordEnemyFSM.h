@@ -30,17 +30,19 @@ protected:
 public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+    UFUNCTION(BlueprintCallable)
+    void AttackState(float Damage);  // 적이 공격을 받을 때 호출되는 함수
+
 private:
 	// 대기 상태
 	void IdleState();
 	//이동 상태
 	void MoveState(float DeltaTime);
-	// 공격 상태
-	void AttackState();
-	// 피격 상태
-	void DamageState();
-	// 죽음 상태
-	void DieState();
+
+	//// 피격 상태
+	//void DamageState();
+	// 적이 죽을 때 호출되는 함수
+	void DieState();  
 
 	void CheckPlayerDistance();
 
@@ -56,10 +58,14 @@ public:
 
 
 	UPROPERTY(EditDefaultsOnly, Category = FSM)
-    float chaseRange = 600.0f;
-
+    float chaseRange = 400.0f;
+	
+	// 공격 범위
     UPROPERTY(EditDefaultsOnly, Category = FSM)
     float attackRange = 150.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = FSM)
+	float moveSpeed	 = 100.0f;
 
 
 	// 경과 시간
@@ -73,7 +79,11 @@ public:
 	UPROPERTY()
 	class ASwordEnemy* me;
 
-	//// 공격 범위
-	//UPROPERTY(EditAnywhere, Category = FSM)
-	//float attackRange = 150.0f;
+	UPROPERTY(EditDefaultsOnly, Category = "Attack")
+    UAnimMontage* AttackMontage;  // 공격 애니메이션 몽타주
+
+	UPROPERTY(EditDefaultsOnly, Category = FSM)
+    TSubclassOf<class AActor> CoinClass;  // 코인 클래스 선언
+
+	float Health;  // 적의 체력
 };
