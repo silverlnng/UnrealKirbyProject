@@ -1,13 +1,10 @@
 #include "SwordEnemyFSM.h"
-#include "KirbyProjectCharacter.h"
+#include "KirbyProject/KirbyProjectCharacter.h"
 #include "SwordEnemy.h"
 #include "Kismet/GameplayStatics.h"
-//#include "TimerManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Actor.h"
 #include "Math/UnrealMathUtility.h"
-//#include "Animation/AnimInstance.h"
-//#include "Engine/World.h"
 
 
 USwordEnemyFSM::USwordEnemyFSM()
@@ -26,12 +23,6 @@ void USwordEnemyFSM::BeginPlay()
 	// 소유 객체 가져오기
 	me = Cast<ASwordEnemy>(GetOwner());
 	
-
-	if (me)
-	{
-		// 적의 기본 이동 속도를 설정
-		me->GetCharacterMovement()->MaxWalkSpeed = moveSpeed;
-	}
 }
 
 void USwordEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -49,11 +40,11 @@ void USwordEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		MoveState(DeltaTime);
 		break;
 	case EEnemyState::Attack:
-		AttackState(3.0);
+		AttackState();
 		break;
-	/*case EEnemyState::Damage:
+	case EEnemyState::Damage:
 		DamageState();
-		break;*/
+		break;
 	case EEnemyState::Die:
 		DieState();
 		break;
@@ -108,9 +99,7 @@ void USwordEnemyFSM::MoveState(float DeltaTime)
 
 		// 방향 필요
 		FVector dir = destination - me->GetActorLocation();
-		dir.Z = 0;  // 방향 벡터의 Z 축을 0으로 설정하여 수평 이동만 하도록 함\
-
-
+		dir.Z = 0;  // 방향 벡터의 Z 축을 0으로 설정하여 수평 이동만 하도록 함
 
 		
 		if (!dir.IsNearlyZero())
@@ -127,71 +116,18 @@ void USwordEnemyFSM::MoveState(float DeltaTime)
 	}
 }
 
-void USwordEnemyFSM::AttackState(float Damage)
+// 공격 상태
+void USwordEnemyFSM::AttackState() 
 {
-	Health -= Damage;
-	if (Health <= 0)
+	if (target && me->GetDistanceTo(target) <= attackRange)
 	{
-		DieState();
+		// 애니메이션을 재생하거나 공격 로직을 추가
+		// 예: me->PlayAttackMontage();
 	}
 }
 
-void USwordEnemyFSM::DieState()
-{
-	if (CoinClass)
-	{
-		FVector SpawnLocation = me->GetActorLocation();
-		FRotator SpawnRotation = me->GetActorRotation();
-		GetWorld()->SpawnActor<AActor>(CoinClass, SpawnLocation, SpawnRotation);
-	}
+// 피격 상태
+void USwordEnemyFSM::DamageState() {}
 
-	//Destroy();  // 적을 제거
-	if (me)
-	{
-		// 적의 모든 컴포넌트를 비활성화
-		me->SetActorHiddenInGame(true);
-		me->SetActorEnableCollision(false);
-		me->SetActorTickEnabled(false);
-
-		// 모든 메쉬 컴포넌트 비활성화
-		TArray<UActorComponent*> Components;
-		me->GetComponents(Components);
-		for (UActorComponent* Component : Components)
-		{
-			Component->Deactivate();
-		}
-	}
-}
-
-//// 공격 상태
-//void USwordEnemyFSM::AttackState() 
-//{
-//	if (target && me->GetDistanceTo(target) <= attackRange)
-//	{
-//		if (me->GetMesh() && AttackMontage)
-//		{
-//			UAnimInstance* AnimInstance = me->GetMesh()->GetAnimInstance();
-//			if (AnimInstance && !AnimInstance->Montage_IsPlaying(AttackMontage))
-//			{
-//				AnimInstance->Montage_Play(AttackMontage);
-//
-//				// 데미지 이벤트를 애니메이션 몽타주의 특정 시점에서 트리거합니다.
-//				FTimerHandle TimerHandle;
-//				GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
-//					{
-//						if (target && me->GetDistanceTo(target) <= attackRange)
-//						{
-//							// 데미지를 줍니다 (데미지 값과 로직은 필요에 따라 수정)
-//							target->TakeDamage(10.0f, FDamageEvent(), nullptr, me);
-//						}
-//					}, 0.5f, false);  // 0.5초 후에 데미지를 줍니다 (애니메이션에 맞춰 타이밍 조정)
-//			}
-//		}
-//	}
-//}
-
-//// 피격 상태
-//void USwordEnemyFSM::DamageState() {}
-//
-//// 죽음 상태
-//void USwordEnemyFSM::DieState() {}
+// 죽음 상태
+void USwordEnemyFSM::DieState() {}
