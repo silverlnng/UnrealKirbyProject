@@ -2,6 +2,7 @@
 #include "SwordEnemyFSM.h"
 #include "UObject/ConstructorHelpers.h"
 
+
 ASwordEnemy::ASwordEnemy()
 {
 	PrimaryActorTick.bCanEverTick = true;
