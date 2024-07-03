@@ -16,7 +16,7 @@ AFireEnemy::AFireEnemy()
 
 	FireRange = 1000.0f; // 플레이어가 다가와야 하는 거리
 	FireInterval = 1.0f; // 불을 쏘는 간격
-	Health = 3;  // 초기 체력 설정
+	Health = 3.0f;  // 초기 체력 설정
 }
 
 void AFireEnemy::BeginPlay()
@@ -82,7 +82,7 @@ void AFireEnemy::RotateToPlayer(float DeltaTime)
 	}
 }
 
-void AFireEnemy::OnHit(int32 Damage)
+void AFireEnemy::OnHit(float Damage)
 {
 	Health -= Damage;
 	if (Health <= 0)

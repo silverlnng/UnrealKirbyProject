@@ -69,7 +69,7 @@ void USwordEnemyFSM::CheckPlayerDistance()
 
 		if (distance <= attackRange)
 		{
-			mState = EEnemyState::Attack;
+			//mState = EEnemyState::Attack;
 		}
 		else if (distance <= chaseRange)
 		{
