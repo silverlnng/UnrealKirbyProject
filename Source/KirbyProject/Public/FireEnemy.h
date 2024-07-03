@@ -32,7 +32,7 @@ private:
 
     APawn* PlayerPawn;
 
-    int32 Health;  // 적의 체력
+    float Health;  // 적의 체력
 
 public:	
 	AFireEnemy();
@@ -44,7 +44,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
     UFUNCTION(BlueprintCallable)
-    void OnHit(int32 Damage);  // 적이 공격을 받을 때 호출되는 함수
+    void OnHit(float Damage);  // 적이 공격을 받을 때 호출되는 함수
 
 private:
     void CheckFireCondition();
