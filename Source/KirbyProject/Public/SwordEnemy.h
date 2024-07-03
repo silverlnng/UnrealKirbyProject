@@ -25,4 +25,7 @@ public:
 	// 적 AI 관리 컴포넌트 클래스
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = FSMComponent)
 	class USwordEnemyFSM* fsm;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attack")
+    UAnimMontage* AttackMontage;  // 공격 애니메이션 몽타주
 };
