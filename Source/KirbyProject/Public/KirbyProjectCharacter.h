@@ -97,6 +97,15 @@ public:
 	bool bSwordAttacking;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SwordAttack")
+	bool bSwordAttacking_1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SwordAttack")
+	bool bSwordAttacking_2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SwordAttack")
+	bool bSwordAttacking_3;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SwordAttack")
 	bool bSwordSpecialAttack;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SwordAttack")

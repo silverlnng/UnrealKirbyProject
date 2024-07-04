@@ -159,6 +159,9 @@ void AKirbyProjectCharacter::SwordAttack_started()
 	// 타이머 작동
 	bSwordAttacking = true;
 	PlayAnimMontage(SwordAttackAnimMontage_1);
+
+	// 첫번째 start 입력과 두번째 start 입력 간의 시간을 계산하기 
+	//bSwordAttacking_1 = true;
 }
 
 void AKirbyProjectCharacter::SwordAttack_triggered()
@@ -166,7 +169,7 @@ void AKirbyProjectCharacter::SwordAttack_triggered()
 	// 버튼을 일정시간 이상 동안 누르는 중이면 필살기를 위한 대기자세(애니메이션2)를 LOOP 로 실행 
 	UE_LOG(LogTemp, Warning, TEXT("%f"), AttackPressTime);
 
-	if (AttackPressTime >= SwordAttackTime*0.3)
+	if (AttackPressTime >= SwordAttackTime*0.5f)
 	{
 		PlayAnimMontage(SwordAttackAnimMontage_2);
 	}
@@ -186,7 +189,10 @@ void AKirbyProjectCharacter::SwordAttack_completed()
 	{
 		PlayAnimMontage(SwordAttackAnimMontage_3);
 	}
-
+	else
+	{
+		PlayAnimMontage(SwordAttackAnimMontage_1);
+	}
 	UE_LOG(LogTemp, Warning, TEXT("%f"), AttackPressTime);
 
 	AttackPressTime = 0.f;		//타이머 리셋
