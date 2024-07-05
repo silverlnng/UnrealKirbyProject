@@ -156,6 +156,7 @@ void AKirbyProjectCharacter::Look(const FInputActionValue& Value)
 
 void AKirbyProjectCharacter::SwordAttack_started()
 {
+	GEngine->AddOnScreenDebugMessage(0, 2, FColor::Cyan, TEXT("SwordAttack_started"));
 	// 타이머 작동
 	bSwordAttacking = true;
 	PlayAnimMontage(SwordAttackAnimMontage_1);

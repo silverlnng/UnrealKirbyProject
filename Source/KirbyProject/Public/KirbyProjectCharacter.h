@@ -82,6 +82,8 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SwordAttack")
 	EState state = EState::E_None;
 
 	UFUNCTION(BlueprintCallable)
