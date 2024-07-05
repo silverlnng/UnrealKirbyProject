@@ -85,5 +85,5 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = FSM)
     TSubclassOf<class AActor> CoinClass;  // 코인 클래스 선언
 
-	float Health;  // 적의 체력
+	float Health = 3.0f;  // 적의 체력
 };
