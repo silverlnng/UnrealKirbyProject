@@ -10,6 +10,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Animation/AnimInstance.h"
+#include "Animation/AnimMontage.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -52,12 +54,30 @@ AKirbyProjectCharacter::AKirbyProjectCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 void AKirbyProjectCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+}
+
+
+
+void AKirbyProjectCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	
+	if (bSwordAttacking)
+	{
+		AttackPressTime += DeltaTime;
+		//
+	}
+	
+
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -86,6 +106,11 @@ void AKirbyProjectCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AKirbyProjectCharacter::Look);
+
+		// 스워드 공격
+		EnhancedInputComponent->BindAction(SwordAttackAction, ETriggerEvent::Started, this, &AKirbyProjectCharacter::SwordAttack_started);
+		EnhancedInputComponent->BindAction(SwordAttackAction, ETriggerEvent::Triggered, this, &AKirbyProjectCharacter::SwordAttack_triggered);
+		EnhancedInputComponent->BindAction(SwordAttackAction, ETriggerEvent::Completed, this, &AKirbyProjectCharacter::SwordAttack_completed);
 	}
 	else
 	{
@@ -127,4 +152,49 @@ void AKirbyProjectCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
+}
+
+void AKirbyProjectCharacter::SwordAttack_started()
+{
+	GEngine->AddOnScreenDebugMessage(0, 2, FColor::Cyan, TEXT("SwordAttack_started"));
+	// 타이머 작동
+	bSwordAttacking = true;
+	PlayAnimMontage(SwordAttackAnimMontage_1);
+
+	// 첫번째 start 입력과 두번째 start 입력 간의 시간을 계산하기 
+	//bSwordAttacking_1 = true;
+}
+
+void AKirbyProjectCharacter::SwordAttack_triggered()
+{
+	// 버튼을 일정시간 이상 동안 누르는 중이면 필살기를 위한 대기자세(애니메이션2)를 LOOP 로 실행 
+	UE_LOG(LogTemp, Warning, TEXT("%f"), AttackPressTime);
+
+	if (AttackPressTime >= SwordAttackTime*0.5f)
+	{
+		PlayAnimMontage(SwordAttackAnimMontage_2);
+	}
+
+	// 아니라면 단순 공격
+
+}
+
+void AKirbyProjectCharacter::SwordAttack_completed()
+{
+	bSwordAttacking = false;		//타이머 종료
+
+
+	//AttackPressTime  3초 이상이면 필살기 공격까지 
+		// 아니라면 단순공격임 아무런 일도 없어야
+	if (AttackPressTime >= SwordAttackTime)
+	{
+		PlayAnimMontage(SwordAttackAnimMontage_3);
+	}
+	else
+	{
+		PlayAnimMontage(SwordAttackAnimMontage_1);
+	}
+	UE_LOG(LogTemp, Warning, TEXT("%f"), AttackPressTime);
+
+	AttackPressTime = 0.f;		//타이머 리셋
 }
