@@ -2,6 +2,8 @@
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "BombProjectile.h"
+#include "KirbyProjectCharacter.h"
+#include "Components/CapsuleComponent.h"
 
 ABombEnemy::ABombEnemy()
 {
@@ -16,6 +18,14 @@ ABombEnemy::ABombEnemy()
 	BombRange = 1000.0f; // 플레이어가 다가와야 하는 거리
 	BombInterval = 1.0f; // 불을 쏘는 간격
 	Health = 3.0f;  // 초기 체력 설정
+
+	// 콜리전 캡슐 추가
+	DetectionCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("DetectionCapsule"));
+	DetectionCapsule->SetupAttachment(Root);
+	DetectionCapsule->InitCapsuleSize(55.0f, 96.0f);
+	DetectionCapsule->SetCollisionProfileName(TEXT("Trigger"));
+	DetectionCapsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	DetectionCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABombEnemy::OnOverlapBegin);
 }
 
 void ABombEnemy::BeginPlay()
@@ -99,4 +109,20 @@ void ABombEnemy::Die()
 	}
 
 	Destroy();  // 적을 제거
+}
+
+void ABombEnemy::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+	const FHitResult& SweepResult)
+{
+	// 플레이어와 충돌 시 데미지를 줌
+	if (OtherActor && (OtherActor != this) && OtherComp)
+	{
+		AKirbyProjectCharacter* Player = Cast<AKirbyProjectCharacter>(OtherActor);
+		if (Player)
+		{
+			// 플레이어에게 데미지를 줌 (필요한 데미지 처리 로직 추가)
+			UGameplayStatics::ApplyDamage(Player, 10.0f, nullptr, this, nullptr);
+		}
+	}
 }
