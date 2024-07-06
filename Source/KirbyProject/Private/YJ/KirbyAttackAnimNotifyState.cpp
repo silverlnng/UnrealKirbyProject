@@ -19,7 +19,7 @@ void UKirbyAttackAnimNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, 
 
 void UKirbyAttackAnimNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime, const FAnimNotifyEventReference& EventReference)
 {
-	// 깃 테스트 주석
+	
 }
 
 void UKirbyAttackAnimNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
