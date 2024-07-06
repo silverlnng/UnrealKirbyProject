@@ -15,6 +15,8 @@ struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FChainAniDele);
+
 UENUM(BlueprintType) // BlueprintType을 사용하여 블루프린트에서 사용 가능하게 합니다.
 enum class EState : uint8
 {
@@ -99,10 +101,10 @@ public:
 	bool bSwordAttacking;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SwordAttack")
-	bool bSwordAttacking_1;
+	bool bSwordChainAttack_1 = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SwordAttack")
-	bool bSwordAttacking_2;
+	bool bSwordChainAttack_2 = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SwordAttack")
 	bool bSwordAttacking_3;
@@ -117,15 +119,31 @@ public:
 	float AttackPressTime =0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="SwordAttack")
-	class UAnimMontage* SwordAttackAnimMontage_1;
+	class UAnimMontage* SwordChain;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="SwordAttack")
-	class UAnimMontage* SwordAttackAnimMontage_2;
+	class UAnimMontage* SwordAttackAnim_basic;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="SwordAttack")
-	class UAnimMontage* SwordAttackAnimMontage_3;
+	class UAnimMontage* SwordStrongAttackAnimMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="SwordAttack")
-	UInputAction* SwordAttackAction;
+	class UAnimMontage* SwordStrongAttackWait;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="SwordAttack")
+	class UInputAction* SwordAttackAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="SwordAttack")
+	class UAnimInstance* AnimInstance;
+
+	UFUNCTION(BlueprintCallable)
+	bool IsMontagePlaying(UAnimMontage* Montage);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="SwordAttack")
+	FChainAniDele OnChainAniDele;
+
+	UFUNCTION(BlueprintCallable)
+	void MontagePlaying();
 };
 
