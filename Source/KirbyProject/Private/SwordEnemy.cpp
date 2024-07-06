@@ -8,7 +8,7 @@ ASwordEnemy::ASwordEnemy()
 	PrimaryActorTick.bCanEverTick = true;
 
 	// skeletal mesh 데이터 로드
-	ConstructorHelpers::FObjectFinder<USkeletalMesh> tempMesh(TEXT("/Game/Resource/Enemy/Sword/Animation/SwordEnemy.SwordEnemy"));
+	ConstructorHelpers::FObjectFinder<USkeletalMesh> tempMesh(TEXT("'/Game/Resource/Enemy/Sword/Animation/SKM_SwordEnemy.SKM_SwordEnemy'"));
 	
 	// 데이터 로드에 성공하면
 	if (tempMesh.Succeeded()) {

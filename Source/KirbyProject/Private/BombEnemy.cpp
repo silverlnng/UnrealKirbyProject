@@ -14,6 +14,8 @@ ABombEnemy::ABombEnemy()
 
 	BombMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BombMesh"));
 	BombMesh->SetupAttachment(Root);
+	BombMesh->SetSimulatePhysics(true);
+	BombMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
 	BombMesh->SetSimulatePhysics(true);
 	BombMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -86,7 +88,7 @@ void ABombEnemy::RotateToPlayer(float DeltaTime)
 			FRotator TargetRotation = Direction.Rotation();
 			FRotator CurrentRotation = GetActorRotation();
 
-			TargetRotation.Yaw += -90.0f;
+			TargetRotation.Yaw += -120.0f;
 
 			FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 5.0f);  // 회전 속도를 조정할 수 있습니다.
 			SetActorRotation(NewRotation);
