@@ -15,7 +15,7 @@ ASwordEnemy::ASwordEnemy()
 		//데이터 할당
 		GetMesh()->SetSkeletalMesh(tempMesh.Object);
 		// 메시 위치 및 회전 설정
-		GetMesh()->SetRelativeLocationAndRotation(FVector(0, 0, -88), FRotator(0, -90, 0));
+		GetMesh()->SetRelativeLocationAndRotation(FVector(0, 0, -88), FRotator(0, 0, 0));
 		// 메시 크기 수정
 		GetMesh()->SetRelativeScale3D(FVector(0.84f));
 	}

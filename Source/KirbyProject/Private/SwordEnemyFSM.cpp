@@ -121,6 +121,9 @@ void USwordEnemyFSM::MoveState(float DeltaTime)
 			// 적의 방향을 플레이어를 향하도록 회전
 			FRotator targetRotation = dir.Rotation();
 			FRotator currentRotation = me->GetActorRotation();
+
+			targetRotation.Yaw += -90.0f;
+
 			FRotator newRotation = FMath::RInterpTo(currentRotation, targetRotation, DeltaTime, 5.0f);  // 회전 속도를 조정할 수 있습니다.
 			me->SetActorRotation(newRotation);
 		}
