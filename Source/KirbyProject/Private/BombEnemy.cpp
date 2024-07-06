@@ -14,6 +14,8 @@ ABombEnemy::ABombEnemy()
 
 	BombMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BombMesh"));
 	BombMesh->SetupAttachment(Root);
+	BombMesh->SetSimulatePhysics(true);
+	BombMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
 	BombRange = 1000.0f; // 플레이어가 다가와야 하는 거리
 	BombInterval = 1.0f; // 불을 쏘는 간격
@@ -82,7 +84,7 @@ void ABombEnemy::RotateToPlayer(float DeltaTime)
 			FRotator TargetRotation = Direction.Rotation();
 			FRotator CurrentRotation = GetActorRotation();
 
-			TargetRotation.Yaw += -90.0f;
+			TargetRotation.Yaw += -120.0f;
 
 			FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 5.0f);  // 회전 속도를 조정할 수 있습니다.
 			SetActorRotation(NewRotation);
