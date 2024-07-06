@@ -20,6 +20,8 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 // 20240706 상경 깃 테스트용 주석.
 
+// 04:02 윤주 깃 테스트용 주석.
+
 AKirbyProjectCharacter::AKirbyProjectCharacter()
 {
 	// Set size for collision capsule
