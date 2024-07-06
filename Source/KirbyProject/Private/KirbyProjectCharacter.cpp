@@ -56,15 +56,12 @@ AKirbyProjectCharacter::AKirbyProjectCharacter()
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
 	PrimaryActorTick.bCanEverTick = true;
-
-	OnChainAniDele.AddDynamic(this,&AKirbyProjectCharacter::MontagePlaying);
 }
 
 void AKirbyProjectCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
-	AnimInstance = GetMesh()->GetAnimInstance();
 }
 
 
@@ -162,30 +159,7 @@ void AKirbyProjectCharacter::SwordAttack_started()
 	GEngine->AddOnScreenDebugMessage(0, 2, FColor::Cyan, TEXT("SwordAttack_started"));
 	// 타이머 작동
 	bSwordAttacking = true;
-
-	if (bSwordChainAttack_1 && !IsMontagePlaying(SwordAttackAnim_basic))
-	{
-		PlayAnimMontage(SwordAttackAnim_basic);
-		bSwordChainAttack_1 = false;
-	}
-	else if (IsMontagePlaying(SwordAttackAnim_basic))
-	{
-		// 체인 애니메이션 1이 플레이가 끝나기 전에 입력이 한번 들어온다면
-		// 체인 애니메이션2 를 실행시켜야함  
-		// 
-		//  그러나 체인 애니메이션 1이 플레이 중이라면 모두 끝난뒤
-			// 델리게이트로 받아서
-		
-		bSwordChainAttack_2 =true;
-
-		// 체인 애니메이션 1이 플레이가 끝나기 전에 입력이 안들어온다면 
-		// 체인 애니메이션 1 실행시키고 끝
-	}
-	else
-	{
-		bSwordChainAttack_2 = false;
-	}
-	
+	PlayAnimMontage(SwordAttackAnimMontage_1);
 
 	// 첫번째 start 입력과 두번째 start 입력 간의 시간을 계산하기 
 	//bSwordAttacking_1 = true;
@@ -198,9 +172,7 @@ void AKirbyProjectCharacter::SwordAttack_triggered()
 
 	if (AttackPressTime >= SwordAttackTime*0.5f)
 	{
-		//진행중이던 애니메이션을 멈추고
-		StopAnimMontage(SwordChain);
-		PlayAnimMontage(SwordStrongAttackWait);
+		PlayAnimMontage(SwordAttackAnimMontage_2);
 	}
 
 	// 아니라면 단순 공격
@@ -216,33 +188,13 @@ void AKirbyProjectCharacter::SwordAttack_completed()
 		// 아니라면 단순공격임 아무런 일도 없어야
 	if (AttackPressTime >= SwordAttackTime)
 	{
-		PlayAnimMontage(SwordStrongAttackAnimMontage);
+		PlayAnimMontage(SwordAttackAnimMontage_3);
 	}
 	else
 	{
-		if (IsMontagePlaying(SwordStrongAttackWait))
-		{
-			StopAnimMontage(SwordStrongAttackWait);
-		}
-		else if (IsMontagePlaying(SwordChain))
-		{
-			StopAnimMontage(SwordChain);
-		}
-		//PlayAnimMontage(SwordAttackAnimMontage_1);
-		
+		PlayAnimMontage(SwordAttackAnimMontage_1);
 	}
 	UE_LOG(LogTemp, Warning, TEXT("%f"), AttackPressTime);
 
 	AttackPressTime = 0.f;		//타이머 리셋
-}
-
-bool AKirbyProjectCharacter::IsMontagePlaying(UAnimMontage* Montage)
-{
-	return AnimInstance->Montage_IsPlaying(Montage);
-}
-
-void AKirbyProjectCharacter::MontagePlaying()
-{
-	PlayAnimMontage(SwordChain);
-	bSwordChainAttack_2 = false;
 }
