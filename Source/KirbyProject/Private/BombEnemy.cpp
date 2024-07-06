@@ -15,6 +15,9 @@ ABombEnemy::ABombEnemy()
 	BombMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BombMesh"));
 	BombMesh->SetupAttachment(Root);
 
+	BombMesh->SetSimulatePhysics(true);
+	BombMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
 	BombRange = 1000.0f; // 플레이어가 다가와야 하는 거리
 	BombInterval = 1.0f; // 불을 쏘는 간격
 	Health = 3.0f;  // 초기 체력 설정
@@ -35,6 +38,7 @@ void ABombEnemy::BeginPlay()
 	PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 
 	GetWorldTimerManager().SetTimer(BombTimerHandle, this, &ABombEnemy::CheckBombCondition, BombInterval, true);
+
 }
 
 void ABombEnemy::Tick(float DeltaTime)
