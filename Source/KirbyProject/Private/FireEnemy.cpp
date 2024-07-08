@@ -76,7 +76,7 @@ void AFireEnemy::RotateToPlayer(float DeltaTime)
 
 			TargetRotation.Yaw += -90.0f;
 
-			FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 5.0f);  // 회전 속도를 조정할 수 있습니다.
+			FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 2.0f);  // 회전 속도를 조정할 수 있습니다.
 			SetActorRotation(NewRotation);
 		}
 	}
