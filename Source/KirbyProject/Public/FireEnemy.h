@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/Timelinecomponent.h"
 #include "FireEnemy.generated.h"
 
 UCLASS()
@@ -49,6 +50,17 @@ public:
 private:
     void CheckFireCondition();
     void Fire();
-    void RotateToPlayer(float DeltaTime);
+    //void RotateToPlayer(float DeltaTime);
     void Die();  // 적이 죽을 때 호출되는 함수
+
+    // 타임라인 애니메이션
+    UFUNCTION()
+    void UpdateScale(float ScaleValue);
+
+    // 타임라인 컴포넌트 및 curve
+    UPROPERTY()
+    UTimelineComponent* FireTimeline;
+
+    UPROPERTY(EditAnywhere, Category = "Animation")
+    UCurveFloat* ScaleCurve;
 };
