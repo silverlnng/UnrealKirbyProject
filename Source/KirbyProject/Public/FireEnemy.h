@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/Timelinecomponent.h"
 #include "FireEnemy.generated.h"
 
 UCLASS()
@@ -43,12 +44,23 @@ protected:
 public:	
 	virtual void Tick(float DeltaTime) override;
 
-    UFUNCTION(BlueprintCallable)
-    void OnHit(float Damage);  // 적이 공격을 받을 때 호출되는 함수
+    //UFUNCTION(BlueprintCallable)
+    //void OnHit(float Damage);  // 적이 공격을 받을 때 호출되는 함수
 
 private:
     void CheckFireCondition();
     void Fire();
-    void RotateToPlayer(float DeltaTime);
+    //void RotateToPlayer(float DeltaTime);
     void Die();  // 적이 죽을 때 호출되는 함수
+
+    // 타임라인 애니메이션
+    UFUNCTION()
+    void UpdateScale(float ScaleValue);
+
+    // 타임라인 컴포넌트 및 curve
+    UPROPERTY()
+    UTimelineComponent* FireTimeline;
+
+    UPROPERTY(EditAnywhere, Category = "Animation")
+    UCurveFloat* ScaleCurve;
 };

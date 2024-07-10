@@ -1,7 +1,9 @@
 #include "FireEnemy.h"
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
-#include "Projectile.h" // 이 파일은 FireProjectileClass가 사용하는 클래스의 헤더 파일이어야 합니다.
+#include "Projectile.h" 
+#include "Components/TimelineComponent.h"
+#include "Curves/CurveFloat.h"
 
 
 AFireEnemy::AFireEnemy()
@@ -14,9 +16,18 @@ AFireEnemy::AFireEnemy()
 	FireMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FireMesh"));
 	FireMesh->SetupAttachment(Root);
 
-	FireRange = 1000.0f; // 플레이어가 다가와야 하는 거리
-	FireInterval = 1.0f; // 불을 쏘는 간격
+	FireRange = 2000.0f; // 플레이어가 다가와야 하는 거리
+	FireInterval = 1.5f; // 불을 쏘는 간격
 	Health = 3.0f;  // 초기 체력 설정
+
+	// 타임라인 컴포넌트 초기화 -------------------------------------------------------------
+	FireTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("FireTimeline"));
+
+	static ConstructorHelpers::FObjectFinder<UCurveFloat> Curve(TEXT("/Game/Resource/Enemy/Fire/CannonScaleCurve.CannonScaleCurve"));
+	if (Curve.Succeeded())
+	{
+		ScaleCurve = Curve.Object;
+	}
 }
 
 void AFireEnemy::BeginPlay()
@@ -26,16 +37,29 @@ void AFireEnemy::BeginPlay()
 	PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 
 	GetWorldTimerManager().SetTimer(FireTimerHandle, this, &AFireEnemy::CheckFireCondition, FireInterval, true);
+
+	// --------------------------------------------------------------------
+	if (ScaleCurve)
+	{
+		FOnTimelineFloat TimelineCallback;
+		TimelineCallback.BindUFunction(this, FName("UpdateScale"));
+		FireTimeline->AddInterpFloat(ScaleCurve, TimelineCallback);
+	}
 }
 
 void AFireEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (PlayerPawn) {
-		RotateToPlayer(DeltaTime);  // 매 프레임마다 플레이어를 향해 회전
-	}
+	//if (PlayerPawn) {
+	//	RotateToPlayer(DeltaTime);  // 매 프레임마다 플레이어를 향해 회전
+	//}
 
+	// FireTimeline 업데이트------------------------------------------------------------
+	if (FireTimeline)
+	{
+		FireTimeline->TickComponent(DeltaTime, ELevelTick::LEVELTICK_TimeOnly, nullptr);
+	}
 }
 
 void AFireEnemy::CheckFireCondition()
@@ -55,41 +79,47 @@ void AFireEnemy::Fire()
 {
 	if (FireProjectileClass)
 	{
-		FVector FireLocation = FireMesh->GetSocketLocation(FName("FireEnemySocket"));
-		FRotator FireRotation = FireMesh->GetSocketRotation(FName("FireEnemySocket"));
+		FVector FireLocation = FireMesh->GetSocketLocation(FName("FireSocket"));
+		FRotator FireRotation = FireMesh->GetSocketRotation(FName("FireSocket"));
 
 		GetWorld()->SpawnActor<AProjectile>(FireProjectileClass, FireLocation, FireRotation);
-	}
-}
 
-void AFireEnemy::RotateToPlayer(float DeltaTime)
-{
-	if (PlayerPawn)
-	{
-		FVector Direction = PlayerPawn->GetActorLocation() - GetActorLocation();
-		Direction.Z = 0;  // 수평 회전만 하도록 Z축을 0으로 설정
-
-		if (!Direction.IsNearlyZero())
+		// 타임라인 재생------------------------
+		if (FireTimeline)
 		{
-			FRotator TargetRotation = Direction.Rotation();
-			FRotator CurrentRotation = GetActorRotation();
-
-			TargetRotation.Yaw += -90.0f;
-
-			FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 2.0f);  // 회전 속도를 조정할 수 있습니다.
-			SetActorRotation(NewRotation);
+			FireTimeline->PlayFromStart();
 		}
 	}
 }
 
-void AFireEnemy::OnHit(float Damage)
-{
-	Health -= Damage;
-	if (Health <= 0)
-	{
-		Die();
-	}
-}
+//void AFireEnemy::RotateToPlayer(float DeltaTime)
+//{
+//	if (PlayerPawn)
+//	{
+//		FVector Direction = PlayerPawn->GetActorLocation() - GetActorLocation();
+//		Direction.Z = 0;  // 수평 회전만 하도록 Z축을 0으로 설정
+//
+//		if (!Direction.IsNearlyZero())
+//		{
+//			FRotator TargetRotation = Direction.Rotation();
+//			FRotator CurrentRotation = GetActorRotation();
+//
+//			TargetRotation.Yaw += -90.0f;
+//
+//			FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 2.0f);  // 회전 속도를 조정할 수 있습니다.
+//			SetActorRotation(NewRotation);
+//		}
+//	}
+//}
+
+//void AFireEnemy::OnHit(float Damage)
+//{
+//	Health -= Damage;
+//	if (Health <= 0)
+//	{
+//		Die();
+//	}
+//}
 
 void AFireEnemy::Die()
 {
@@ -101,4 +131,10 @@ void AFireEnemy::Die()
 	}
 
 	Destroy();  // 적을 제거
+}
+
+//------------------------------------------------------
+void AFireEnemy::UpdateScale(float ScaleValue)
+{
+	FireMesh->SetRelativeScale3D(FVector(ScaleValue));
 }
