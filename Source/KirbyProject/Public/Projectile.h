@@ -29,4 +29,12 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Projectile")
 	USphereComponent* CollisionComponent;
 
+	// 회전 속도
+    UPROPERTY(EditAnywhere, Category = "Movement")
+    float SpiralSpeed; // 나선형 이동 속도
+	float SpiralRadius; // 나선형 이동 반경
+
+    // 시간 누적 변수
+    float CurrentTime;
+
 };
