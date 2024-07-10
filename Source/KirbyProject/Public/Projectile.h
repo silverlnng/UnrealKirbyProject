@@ -29,25 +29,12 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Projectile")
 	USphereComponent* CollisionComponent;
 
-	//// 회전 속도
- //   UPROPERTY(EditAnywhere, Category = "Movement")
- //   float RotationSpeed;
-
- //   // Sine 함수 활용한 TimeAccumulator
- //   float TimeAccumulator;
-
-	// 원형 궤적의 반지름
+	// 회전 속도
     UPROPERTY(EditAnywhere, Category = "Movement")
-    float CircleRadius;
-
-    // 원형 궤적의 속도
-    UPROPERTY(EditAnywhere, Category = "Movement")
-    float CircleSpeed;
+    float SpiralSpeed; // 나선형 이동 속도
+	float SpiralRadius; // 나선형 이동 반경
 
     // 시간 누적 변수
-    float TimeAccumulator;
-
-    // Projectile 시작 위치
-    FVector StartLocation;
+    float CurrentTime;
 
 };

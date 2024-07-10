@@ -44,8 +44,8 @@ protected:
 public:	
 	virtual void Tick(float DeltaTime) override;
 
-    UFUNCTION(BlueprintCallable)
-    void OnHit(float Damage);  // 적이 공격을 받을 때 호출되는 함수
+    //UFUNCTION(BlueprintCallable)
+    //void OnHit(float Damage);  // 적이 공격을 받을 때 호출되는 함수
 
 private:
     void CheckFireCondition();

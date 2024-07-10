@@ -112,14 +112,14 @@ void AFireEnemy::Fire()
 //	}
 //}
 
-void AFireEnemy::OnHit(float Damage)
-{
-	Health -= Damage;
-	if (Health <= 0)
-	{
-		Die();
-	}
-}
+//void AFireEnemy::OnHit(float Damage)
+//{
+//	Health -= Damage;
+//	if (Health <= 0)
+//	{
+//		Die();
+//	}
+//}
 
 void AFireEnemy::Die()
 {
