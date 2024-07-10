@@ -29,12 +29,22 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Projectile")
 	USphereComponent* CollisionComponent;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+    UStaticMeshComponent* ProjectileMesh;
+
+	// 스팀 VFX
+	UPROPERTY(EditAnywhere)
+	class UParticleSystem* TrailVFX;
+
+	// 이펙트 함수
+	void SpawnTrailEffect();
+
 	// 회전 속도
     UPROPERTY(EditAnywhere, Category = "Movement")
     float SpiralSpeed; // 나선형 이동 속도
 	float SpiralRadius; // 나선형 이동 반경
 
-    // 시간 누적 변수
-    float CurrentTime;
-
+	float CurrentTime = 0.0f;
+	// 시작 위치
+	FVector StartLocation;
 };
