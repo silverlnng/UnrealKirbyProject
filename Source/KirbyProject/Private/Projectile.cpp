@@ -2,6 +2,8 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/SceneComponent.h"
+#include "Components/StaticMeshComponent.h"
 
 // Sets default values
 AProjectile::AProjectile()
@@ -12,12 +14,19 @@ AProjectile::AProjectile()
 	CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
 	RootComponent = CollisionComponent;
 
-	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
-	ProjectileMovement->InitialSpeed = 3000.0f;
-	ProjectileMovement->MaxSpeed = 3000.0f;
+	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
+	ProjectileMesh->SetupAttachment(RootComponent);
 
-	SpiralRadius = 20.0f; // 나선형 이동 반경
-	SpiralSpeed = 10.0f; // 나선형 이동 속도
+	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
+	ProjectileMovement->InitialSpeed = 2000.0f;
+	ProjectileMovement->MaxSpeed = 2000.0f;
+
+	ProjectileMovement->ProjectileGravityScale = 0.0f; // 중력 영향 안 받도록
+	ProjectileMovement->bRotationFollowsVelocity = true;
+	ProjectileMovement->bShouldBounce = false;
+
+	SpiralRadius = 50.0f; // 나선형 이동 반경
+	SpiralSpeed = 0.2f; // 나선형 이동 속도
 }
 
 // Called when the game starts or when spawned
@@ -31,16 +40,32 @@ void AProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// 시간누적
-	CurrentTime = UGameplayStatics::GetTimeSeconds(GetWorld());
+	// 현재 시간
+	//float CurrentTime = 0.0f; 
+	CurrentTime += UGameplayStatics::GetTimeSeconds(GetWorld());
+
+	float ElapsedTime = CurrentTime - DeltaTime;
 	
 	// 나선형 이동 궤적 계산
-	float NewY = SpiralRadius * FMath::Sin(SpiralSpeed * CurrentTime);
-	float NewZ = SpiralRadius * FMath::Cos(SpiralSpeed * CurrentTime);
+	float NewX = SpiralRadius * FMath::Sin(SpiralSpeed * ElapsedTime);
+	float NewZ = SpiralRadius * FMath::Cos(SpiralSpeed * ElapsedTime);
 
-	FVector NewLocation = FVector(0.0f, NewY, NewZ);
+	UE_LOG(LogTemp, Display, TEXT("X: %f"), NewX);
+	UE_LOG(LogTemp, Display, TEXT("Z: %f"), NewZ);
+
+	FVector ForwardVector = GetActorForwardVector() * ProjectileMovement->InitialSpeed * DeltaTime;
+	FVector NewLocation = ForwardVector + FVector(NewX, 0.0f, NewZ);
 
 	// Projectile 이동
-	USceneComponent::K2_SetRelativeLocation
+	ProjectileMesh->SetRelativeLocation(NewLocation);
+
+	//CollisionComponent->K2_SetRelativeLocation(NewLocation, false, FHitResult * OutSweepHitResult = nullptr, ETeleportType Teleport = ETeleportType::None);
 }
 
+void AProjectile::SpawnTrailEffect()
+{
+	if (TrailVFX)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TrailVFX, GetActorLocation());
+	}
+}
