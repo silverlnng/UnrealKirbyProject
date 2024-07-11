@@ -28,6 +28,8 @@ AFireEnemy::AFireEnemy()
 	{
 		ScaleCurve = Curve.Object;
 	}
+
+	ProjectileCount = 0;
 }
 
 void AFireEnemy::BeginPlay()
@@ -70,7 +72,8 @@ void AFireEnemy::CheckFireCondition()
 
 		if (DistanceToPlayer <= FireRange)
 		{
-			Fire();
+			// 시퀀스를 시작합니다.
+			StartSequence();
 		}
 	}
 }
@@ -82,6 +85,8 @@ void AFireEnemy::Fire()
 		FVector FireLocation = FireMesh->GetSocketLocation(FName("FireSocket"));
 		FRotator FireRotation = FireMesh->GetSocketRotation(FName("FireSocket"));
 
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionVFX, FireMesh->GetSocketLocation(FName("FireSocket")));
+
 		GetWorld()->SpawnActor<AProjectile>(FireProjectileClass, FireLocation, FireRotation);
 
 		// 타임라인 재생------------------------
@@ -89,7 +94,26 @@ void AFireEnemy::Fire()
 		{
 			FireTimeline->PlayFromStart();
 		}
+
+		// 2번 0.5초 간격으로 발사하고, 2초 쉬고 반복
+		ProjectileCount++;
+		if (ProjectileCount >= 2)
+		{
+			StopSequence();
+		}
 	}
+}
+
+void AFireEnemy::StartSequence()
+{
+	ProjectileCount = 0;
+	GetWorldTimerManager().SetTimer(ProjectileTimerHandle, this, &AFireEnemy::Fire, 0.5f, true, 0.0f);
+}
+
+void AFireEnemy::StopSequence()
+{
+	GetWorldTimerManager().ClearTimer(ProjectileTimerHandle);
+	GetWorldTimerManager().SetTimer(SequenceTimerHandle, this, &AFireEnemy::StartSequence, 2.0f, false);
 }
 
 //void AFireEnemy::RotateToPlayer(float DeltaTime)
