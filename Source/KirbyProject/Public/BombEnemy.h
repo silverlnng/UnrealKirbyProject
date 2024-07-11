@@ -58,6 +58,8 @@ public:
                         class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, 
                         const FHitResult & SweepResult);
 
+    void ApplySuckingForce(UStaticMeshComponent* Mesh);
+
 private:
     void CheckBombCondition();
     void Bomb();
