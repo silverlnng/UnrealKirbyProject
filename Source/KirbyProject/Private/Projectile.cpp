@@ -41,6 +41,6 @@ void AProjectile::Tick(float DeltaTime)
 	FVector NewLocation = FVector(0.0f, NewY, NewZ);
 
 	// Projectile ¿Ãµø
-	USceneComponent::K2_SetRelativeLocation
+	// USceneComponent::K2_SetRelativeLocation
 }
 
