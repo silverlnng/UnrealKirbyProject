@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/Timelinecomponent.h"
+#include "Components/BoxComponent.h"
 #include "FireEnemy.generated.h"
 
 UCLASS()
@@ -12,7 +13,7 @@ class KIRBYPROJECT_API AFireEnemy : public AActor
 
 private:
     UPROPERTY(VisibleAnywhere)
-    USceneComponent* Root;
+    UBoxComponent* Root;
 
     UPROPERTY(EditDefaultsOnly, Category = "FireEnemy")
     USkeletalMeshComponent* FireMesh;
