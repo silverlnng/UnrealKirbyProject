@@ -32,12 +32,20 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
     UStaticMeshComponent* ProjectileMesh;
 
-	// 스팀 VFX
+	// 날아가는 VFX
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* TrailVFX;
 
 	// 이펙트 함수
 	void SpawnTrailEffect();
+
+	// 충돌 이벤트 핸들러
+    UFUNCTION()
+    void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	// 충돌 VFX
+	UPROPERTY(EditAnywhere)
+	class UParticleSystem* ExplosionVFX;
 
 	// 회전 속도
     UPROPERTY(EditAnywhere, Category = "Movement")
@@ -47,4 +55,8 @@ public:
 	float CurrentTime = 0.0f;
 	// 시작 위치
 	FVector StartLocation;
+
+private:
+	// 게임 모드를 저장할 변수
+	AGameModeBase* GameModeBase;
 };
