@@ -31,7 +31,7 @@
 		},
 		{
 			"Name": "AnythingWorld",
-			"Enabled": true,
+			"Enabled": false,
 			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/8ebaca09749d49e98d05b3cd11f22218",
 			"SupportedTargetPlatforms": [
 				"Win64",
