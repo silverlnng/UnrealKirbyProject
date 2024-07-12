@@ -46,6 +46,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="Animation") 
 	UAnimMontage* DeathAnimMontage;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "G_Enemy1")
+	EEnemyState CurrentState;
+
 	// 적의 체력
 	UPROPERTY(EditDefaultsOnly, Category = "G_Enemy1")
 	float Health;  
@@ -70,7 +73,6 @@ private:
 	//UPROPERTY(EditDefaultsOnly, Category="Input") 
 	//UInputAction* AnimNotifyAction;  
 
-	EEnemyState CurrentState;
 
 	void SetState(EEnemyState NewState);
 	void PlayAnimMontage(UAnimMontage* MontageToPlay);
