@@ -33,6 +33,8 @@ AProjectile::AProjectile()
 void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GameModeBase = UGameplayStatics::GetGameMode(GetWorld());
 }
 
 // Called every frame
@@ -68,4 +70,16 @@ void AProjectile::SpawnTrailEffect()
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TrailVFX, GetActorLocation());
 	}
+}
+
+void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+//	if (ExplosionVFX)
+//	{
+		if (GameModeBase) {
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionVFX, GetActorLocation());
+			// Ãæµ¹ ÈÄ Projectile ÆÄ±«
+			Destroy();
+		}
+//	}
 }
