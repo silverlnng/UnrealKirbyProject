@@ -1,19 +1,23 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "GameFramework/Character.h"
+#include "Animation/AnimMontage.h"
 #include "BombEnemy.generated.h"
 
+
+enum class EEnemyState : uint8
+{
+    Idle,
+    Attack,
+    Dead
+};
+
 UCLASS()
-class KIRBYPROJECT_API ABombEnemy : public AActor
+class KIRBYPROJECT_API ABombEnemy : public ACharacter
 {
 	GENERATED_BODY()
 private:
-    UPROPERTY(VisibleAnywhere)
-    USceneComponent* Root;
-
     UPROPERTY(EditDefaultsOnly, Category = "BombEnemy")
     USkeletalMeshComponent* BombMesh;
 
@@ -39,12 +43,24 @@ private:
     float Health;  // Enemy 체력
 
 public:	
-	// Sets default values for this actor's properties
 	ABombEnemy();
+
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+    void SetState(EEnemyState NewState);
+    void PlayAnimMontage(UAnimMontage* MontageToPlay);
+
+    void InitAnimation();
+    void IdleAnimNotify();
+    void AttackAnimNotify();
+    void DeathAnimNotify();
+    void Idle(); // 기본 상태
+    void Die();  // 적이 죽을 때
+
+    void UpdateAnimation(float DeltaTime);  // 상태에 따른 애니메이션 업데이트
 
 public:	
 	// Called every frame
@@ -60,9 +76,36 @@ public:
 
     void ApplySuckingForce(UStaticMeshComponent* Mesh);
 
+    // 기본 애니메이션 몽타주
+	UPROPERTY(EditDefaultsOnly, Category="Animation") 
+	UAnimMontage* IdleAnimMontage;
+
+	// 공격 애니메이션 몽타주
+	UPROPERTY(EditDefaultsOnly, Category="Animation") 
+	UAnimMontage* AttackAnimMontage;
+
+	// 죽음 애니메이션 몽타주
+	UPROPERTY(EditDefaultsOnly, Category="Animation") 
+	UAnimMontage* DeathAnimMontage;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "G_Enemy1")
+	EEnemyState CurrentState;
+
+    // 별 VFX (맞을 때)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effects")
+	class UParticleSystem* StarVFX; 
+	// 연기 VFX (죽을 때 펑)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effects")
+	class UParticleSystem* SmokeVFX;
+
 private:
     void CheckBombCondition();
     void Bomb();
     void RotateToPlayer(float DeltaTime);
     void Die();  // 적이 죽을 때 호출되는 함수
+
+    // 맞을 때 하얗게 깜박이는 효과
+    FTimerHandle BlinkTimerHandle;
+    void StartBlinkEffect();
+    void StopBlinkEffect();
 };

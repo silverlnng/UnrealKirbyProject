@@ -4,16 +4,16 @@
 #include "BombProjectile.h"
 #include "KirbyProjectCharacter.h"
 #include "Components/CapsuleComponent.h"
+#include "IdleAnimNotify.h"
+#include "AttackAnimNotify.h"
+#include "DeathAnimNotify.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
 ABombEnemy::ABombEnemy()
 {
     PrimaryActorTick.bCanEverTick = true;
 
-    Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-    SetRootComponent(Root);
-
     BombMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BombMesh"));
-    BombMesh->SetupAttachment(Root);
 
     BombMesh->SetSimulatePhysics(true);
     BombMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -24,7 +24,6 @@ ABombEnemy::ABombEnemy()
 
     // 콜리전 캡슐 추가
     DetectionCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("DetectionCapsule"));
-    DetectionCapsule->SetupAttachment(Root);
     DetectionCapsule->InitCapsuleSize(55.0f, 96.0f);
     DetectionCapsule->SetCollisionProfileName(TEXT("Trigger"));
     DetectionCapsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -40,6 +39,7 @@ void ABombEnemy::BeginPlay()
 
     GetWorldTimerManager().SetTimer(BombTimerHandle, this, &ABombEnemy::CheckBombCondition, BombInterval, true);
 
+    InitAnimation();
 }
 
 void ABombEnemy::Tick(float DeltaTime)
@@ -49,6 +49,36 @@ void ABombEnemy::Tick(float DeltaTime)
     if (PlayerPawn) {
         RotateToPlayer(DeltaTime);  // 매 프레임마다 플레이어를 향해 회전
     }
+
+    UpdateAnimation(DeltaTime);
+}
+
+void ABombEnemy::SetState(EEnemyState NewState)
+{
+    if (CurrentState != NewState)
+    {
+        CurrentState = NewState;
+        switch (NewState)
+        {
+        case EEnemyState::Idle:
+            Idle();
+            break;
+        case EEnemyState::Attack:
+            PlayAnimMontage(AttackAnimMontage);
+            break;
+        case EEnemyState::Dead:
+            PlayAnimMontage(DeathAnimMontage);
+            Die();
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+void ABombEnemy::Idle()
+{
+    PlayAnimMontage(IdleAnimMontage);
 }
 
 void ABombEnemy::CheckBombCondition()
@@ -60,6 +90,11 @@ void ABombEnemy::CheckBombCondition()
         if (DistanceToPlayer <= BombRange)
         {
             Bomb();
+            SetState(EEnemyState::Attack);
+        }
+        else
+        {
+            SetState(EEnemyState::Idle); // 범위 안에 없을 경우 Idle로 바뀜
         }
     }
 }
@@ -75,6 +110,7 @@ void ABombEnemy::Bomb()
     }
 }
 
+// Attack
 void ABombEnemy::RotateToPlayer(float DeltaTime)
 {
     if (PlayerPawn)
@@ -97,6 +133,8 @@ void ABombEnemy::RotateToPlayer(float DeltaTime)
 
 void ABombEnemy::OnHit(float Damage)
 {
+    UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), StarVFX, GetActorLocation());
+    StartBlinkEffect(); // 데미지 입을 때 깜박이기 시작
     Health -= Damage;
     if (Health <= 0)
     {
@@ -106,6 +144,8 @@ void ABombEnemy::OnHit(float Damage)
 
 void ABombEnemy::Die()
 {
+    SetState(EEnemyState::Dead);
+
     if (CoinClass)
     {
         FVector SpawnLocation = GetActorLocation();
@@ -113,9 +153,22 @@ void ABombEnemy::Die()
         GetWorld()->SpawnActor<AActor>(CoinClass, SpawnLocation, SpawnRotation);
     }
 
+    // 물리 시뮬레이션 활성화 및 힘 적용 -> 날아가는 효과
+    GetMesh()->SetSimulatePhysics(true);
+    FVector LaunchDirection = FVector(FMath::RandRange(-1.0f, 1.0f), FMath::RandRange(-1.0f, 1.0f), 1.0f);
+    LaunchDirection.Normalize();
+    FVector LaunchForce = LaunchDirection * 1000.0f; // 힘의 크기 조절
+    GetMesh()->AddImpulse(LaunchForce);
+
+    // 일정 시간 후 파괴
+    SetLifeSpan(1.0f); // 1초 후에 파괴
+
+    // 죽을 때 펑
+    UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SmokeVFX, GetActorLocation());
     Destroy();  // 적을 제거
 }
 
+// 이 부분은 사용 안 하는 것 같은데...............맞나
 void ABombEnemy::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
     const FHitResult& SweepResult)
@@ -142,4 +195,103 @@ void ABombEnemy::ApplySuckingForce(UStaticMeshComponent* Mesh)
 
 		Mesh->AddForce(Force);
 	}
+}
+
+// 애니메이션---------------------------------------------------------------------
+void ABombEnemy::InitAnimation()
+{
+    if (IdleAnimMontage)
+    {
+        const auto NotifyEvents = IdleAnimMontage->Notifies;
+        for (FAnimNotifyEvent EventNotify : NotifyEvents)
+        {
+            if (const auto IdleNotify = Cast<UIdleAnimNotify>(EventNotify.Notify))
+            {
+                IdleNotify->OnNotified.AddUObject(this, &ABombEnemy::IdleAnimNotify);
+            }
+        }
+    }
+    if (AttackAnimMontage)
+    {
+        const auto NotifyEvents = AttackAnimMontage->Notifies;
+        for (FAnimNotifyEvent EventNotify : NotifyEvents)
+        {
+            if (const auto AttackNotify = Cast<UAttackAnimNotify>(EventNotify.Notify))
+            {
+                AttackNotify->OnNotified.AddUObject(this, &ABombEnemy::AttackAnimNotify);
+            }
+        }
+    }
+    if (DeathAnimMontage)
+    {
+        const auto NotifyEvents = DeathAnimMontage->Notifies;
+        for (FAnimNotifyEvent EventNotify : NotifyEvents)
+        {
+            if (const auto DeathNotify = Cast<UDeathAnimNotify>(EventNotify.Notify))
+            {
+                DeathNotify->OnNotified.AddUObject(this, &ABombEnemy::DeathAnimNotify);
+            }
+        }
+    }
+}
+
+void ABombEnemy::IdleAnimNotify()
+{
+    UE_LOG(LogTemp, Warning, TEXT("Idle Anim was finished"));
+}
+
+void ABombEnemy::AttackAnimNotify()
+{
+    UE_LOG(LogTemp, Warning, TEXT("Attack Anim was finished"));
+}
+
+void ABombEnemy::DeathAnimNotify()
+{
+    UE_LOG(LogTemp, Warning, TEXT("Death Anim was finished"));
+}
+
+
+void ABombEnemy::PlayAnimMontage(UAnimMontage* MontageToPlay)
+{
+    if (GetMesh() && MontageToPlay)
+    {
+        GetMesh()->GetAnimInstance()->Montage_Play(MontageToPlay);
+    }
+}
+
+void ABombEnemy::UpdateAnimation(float DeltaTime)
+{
+    switch (CurrentState)
+    {
+    case EEnemyState::Idle:
+        // Idle 상태에서 실행할 로직
+        break;
+    case EEnemyState::Attack:
+        // Attack 상태에서 실행할 로직
+        RotateToPlayer(DeltaTime);
+        break;
+    case EEnemyState::Dead:
+        // Dead 상태에서 실행할 로직
+        Die();
+        break;
+    default:
+        break;
+    }
+}
+
+void ABombEnemy::StartBlinkEffect()
+{
+    if (UMaterialInstanceDynamic* MatInstance = GetMesh()->CreateAndSetMaterialInstanceDynamic(0))
+    {
+        MatInstance->SetScalarParameterValue(FName("BlinkAmount"), 1.0f); // 깜박이기 시작
+    }
+    GetWorldTimerManager().SetTimer(BlinkTimerHandle, this, &ABombEnemy::StopBlinkEffect, 0.1f, false); // 0.1초 후에 깜박임 종료
+}
+
+void ABombEnemy::StopBlinkEffect()
+{
+    if (UMaterialInstanceDynamic* MatInstance = GetMesh()->CreateAndSetMaterialInstanceDynamic(0))
+    {
+        MatInstance->SetScalarParameterValue(FName("BlinkAmount"), 0.0f); // 깜박임 종료
+    }
 }
