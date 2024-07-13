@@ -22,7 +22,7 @@ protected:
 
 	UPROPERTY()
 	APawn* PlayerPawn;
-
+	
 	void SetState(EEnemyState NewState);
 	void PlayAnimMontage(UAnimMontage* MontageToPlay);
 	
@@ -39,6 +39,10 @@ protected:
 
 public:	
 	virtual void Tick(float DeltaTime) override;
+
+	// 적의 체력
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "G_Enemy1")
+	float Health = 1.0f;  
 
 	// 코인 클래스 선언
 	UPROPERTY(EditDefaultsOnly, Category = "Coin")
@@ -73,11 +77,6 @@ public:
 	class UParticleSystem* SmokeVFX;
 
 private:
-
-	// 적의 체력
-	UPROPERTY(EditDefaultsOnly, Category = "G_Enemy1")
-	float Health = 1.0f;  
-
 	// 공격 범위
     UPROPERTY(EditDefaultsOnly, Category = "G_Enemy1")
     float attackRange = 600.0f;

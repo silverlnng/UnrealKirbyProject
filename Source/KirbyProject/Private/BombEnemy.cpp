@@ -13,21 +13,21 @@ ABombEnemy::ABombEnemy()
 {
     PrimaryActorTick.bCanEverTick = true;
 
-    BombMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BombMesh"));
+    //BombMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BombMesh"));
 
-    BombMesh->SetSimulatePhysics(true);
-    BombMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    //BombMesh->SetSimulatePhysics(true);
+    //BombMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
     BombRange = 1000.0f; // 플레이어가 다가와야 하는 거리
     BombInterval = 1.0f; // 불을 쏘는 간격
     Health = 3.0f;  // 초기 체력 설정
 
-    // 콜리전 캡슐 추가
-    DetectionCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("DetectionCapsule"));
-    DetectionCapsule->InitCapsuleSize(55.0f, 96.0f);
-    DetectionCapsule->SetCollisionProfileName(TEXT("Trigger"));
-    DetectionCapsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-    DetectionCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABombEnemy::OnOverlapBegin);
+    //// 콜리전 캡슐 추가
+    //DetectionCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("DetectionCapsule"));
+    //DetectionCapsule->InitCapsuleSize(55.0f, 96.0f);
+    //DetectionCapsule->SetCollisionProfileName(TEXT("Trigger"));
+    //DetectionCapsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    //DetectionCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABombEnemy::OnOverlapBegin);
 }
 
 void ABombEnemy::BeginPlay()
@@ -103,8 +103,8 @@ void ABombEnemy::Bomb()
 {
     if (BombProjectileClass)
     {
-        FVector BombLocation = BombMesh->GetSocketLocation(FName("BombEnemySocket"));
-        FRotator BombRotation = BombMesh->GetSocketRotation(FName("BombEnemySocket"));
+        FVector BombLocation = GetMesh()->GetSocketLocation(FName("BombEnemySocket"));
+        FRotator BombRotation = GetMesh()->GetSocketRotation(FName("BombEnemySocket"));
 
         GetWorld()->SpawnActor<ABombProjectile>(BombProjectileClass, BombLocation, BombRotation);
     }
@@ -185,16 +185,16 @@ void ABombEnemy::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Oth
     }
 }
 
-void ABombEnemy::ApplySuckingForce(UStaticMeshComponent* Mesh)
+void ABombEnemy::ApplySuckingForce()
 {
-	if (Mesh)
-	{
-		FVector ForceDirection = (PlayerPawn->GetActorLocation() - Mesh->GetComponentLocation()).GetSafeNormal();
+	//if (GetMesh)
+	//{
+		FVector ForceDirection = (PlayerPawn->GetActorLocation() - GetMesh()->GetComponentLocation()).GetSafeNormal();
 		float ForceMagnitude = 2000.0f; // 적절한 힘의 크기 설정
 		FVector Force = ForceDirection * ForceMagnitude;
 
-		Mesh->AddForce(Force);
-	}
+        GetMesh()->AddForce(Force);
+    //}
 }
 
 // 애니메이션---------------------------------------------------------------------

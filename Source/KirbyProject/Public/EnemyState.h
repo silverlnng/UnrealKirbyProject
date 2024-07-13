@@ -1,15 +1,13 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UObject/ObjectMacros.h"
+#include "EnemyState.generated.h"
 
-/**
- * 
- */
-class KIRBYPROJECT_API EnemyState
+UENUM(BlueprintType)
+enum class EEnemyState : uint8
 {
-public:
-	EnemyState();
-	~EnemyState();
+    Idle,
+    Attack,
+    Dead
 };

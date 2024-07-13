@@ -3,23 +3,18 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Animation/AnimMontage.h"
+#include "EnemyState.h" // E열거형 공유파일
 #include "BombEnemy.generated.h"
 
 
-enum class EEnemyState : uint8
-{
-    Idle,
-    Attack,
-    Dead
-};
 
 UCLASS()
 class KIRBYPROJECT_API ABombEnemy : public ACharacter
 {
 	GENERATED_BODY()
 private:
-    UPROPERTY(EditDefaultsOnly, Category = "BombEnemy")
-    USkeletalMeshComponent* BombMesh;
+    //UPROPERTY(EditDefaultsOnly, Category = "BombEnemy")
+    //USkeletalMeshComponent* BombMesh;
 
     UPROPERTY(EditDefaultsOnly, Category = "BombEnemy")
     float BombRange;
@@ -33,8 +28,8 @@ private:
     UPROPERTY(EditDefaultsOnly, Category = "BombEnemy")
     TSubclassOf<class AActor> CoinClass;  // 코인 클래스 선언
 
-    UPROPERTY(VisibleAnywhere, Category = Collision)
-    class UCapsuleComponent* DetectionCapsule;
+    //UPROPERTY(VisibleAnywhere, Category = Collision)
+    //class UCapsuleComponent* DetectionCapsule;
 
     FTimerHandle BombTimerHandle;
 
@@ -74,7 +69,7 @@ public:
                         class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, 
                         const FHitResult & SweepResult);
 
-    void ApplySuckingForce(UStaticMeshComponent* Mesh);
+    void ApplySuckingForce();
 
     // 기본 애니메이션 몽타주
 	UPROPERTY(EditDefaultsOnly, Category="Animation") 
@@ -102,7 +97,6 @@ private:
     void CheckBombCondition();
     void Bomb();
     void RotateToPlayer(float DeltaTime);
-    void Die();  // 적이 죽을 때 호출되는 함수
 
     // 맞을 때 하얗게 깜박이는 효과
     FTimerHandle BlinkTimerHandle;
