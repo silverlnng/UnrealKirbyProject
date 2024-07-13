@@ -8,14 +8,13 @@
 #include "IdleAnimNotify.h"
 #include "AttackAnimNotify.h"
 #include "DeathAnimNotify.h"
+#include "AIController.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
 
 AG_Enemy1::AG_Enemy1()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
-	attackRange = 2000.0f; // 플레이어가 다가와야 하는 거리
-	Health = 3.0f;  // 초기 체력 설정
 
 	CurrentState = EEnemyState::Idle;  // 초기 상태를 Idle로 설정
 }
@@ -28,14 +27,6 @@ void AG_Enemy1::BeginPlay()
 
 	InitAnimation();
 }
-
-//void AG_Enemy1::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-//{
-//	if (auto* EnhancedInputcomponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
-//	{
-//		EnhancedInputcomponent->BindAction(AnimNotifyAction, ETriggerEvent::Started, this, &AG_Enemy1::AnimNotifyPressed);
-//	}
-//}
 
 
 void AG_Enemy1::Tick(float DeltaTime)
@@ -54,11 +45,10 @@ void AG_Enemy1::SetState(EEnemyState NewState)
 		switch (NewState)
 		{
 		case EEnemyState::Idle:
-			PlayAnimMontage(IdleAnimMontage);
+			Idle();
 			break;
 		case EEnemyState::Attack:
 			PlayAnimMontage(AttackAnimMontage);
-			Attack(3.0f);
 			break;
 		case EEnemyState::Dead:
 			PlayAnimMontage(DeathAnimMontage);
@@ -72,12 +62,7 @@ void AG_Enemy1::SetState(EEnemyState NewState)
 
 void AG_Enemy1::Idle()
 {
-	// 기본 애니메이션 재생
-	//if (!GetMesh()->GetAnimInstance()->Montage_IsPlaying(AttackAnimMontage))
-	//{
-	//	PlayAnimMontage(AttackAnimMontage);
-	//}
-	PlayAnimMontage(AttackAnimMontage);
+	PlayAnimMontage(IdleAnimMontage);
 }
 
 void AG_Enemy1::CheckAttackCondition()
@@ -86,8 +71,11 @@ void AG_Enemy1::CheckAttackCondition()
 	{
 		float DistanceToPlayer = FVector::Dist(GetActorLocation(), PlayerPawn->GetActorLocation());
 
+		UE_LOG(LogTemp, Warning, TEXT("Distance to Player: %f"), DistanceToPlayer); // 디버그 메시지 추가
+
 		if (DistanceToPlayer <= attackRange)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Switching to Attack State")); // 디버그 메시지 추가
 			// 공격 시작
 			SetState(EEnemyState::Attack);
 		}
@@ -112,9 +100,6 @@ void AG_Enemy1::Attack(float DeltaTime)
 
 		if (!dir.IsNearlyZero())
 		{
-			// 방향으로 이동하고 싶음
-			FVector MoveAction(dir.GetSafeNormal());
-
 			// 적의 방향을 플레이어를 향하도록 회전
 			FRotator targetRotation = dir.Rotation();
 			FRotator currentRotation = GetActorRotation();
@@ -123,13 +108,24 @@ void AG_Enemy1::Attack(float DeltaTime)
 
 			FRotator newRotation = FMath::RInterpTo(currentRotation, targetRotation, DeltaTime, 5.0f);  // 회전 속도 조정할 수 있음
 			SetActorRotation(newRotation);
+
+			// AI 컨트롤러를 통해 플레이어를 향해 이동
+			AAIController* AIController = Cast<AAIController>(GetController());
+			if (AIController)
+			{
+				// 달릴 때 뭉게 효과
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SmokeVFX, GetActorLocation());
+				AIController->MoveToActor(PlayerPawn, 5.0f); // 5.0f는 허용 오차 범위
+			}
 		}
 	}
 }
 
-void AG_Enemy1::Damage(float damage)
+void AG_Enemy1::Damage(float DamageAmount)
 {
-	Health -= damage;
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), StarVFX, GetActorLocation());
+	StartBlinkEffect(); // 데미지 입을 때 깜박이기 시작
+	Health -= DamageAmount;
 	if (Health <= 0)
 	{
 		Die();
@@ -147,12 +143,25 @@ void AG_Enemy1::Die()
 		GetWorld()->SpawnActor<AActor>(CoinClass, SpawnLocation, SpawnRotation);
 	}
 
-	//Destroy();  // 적을 제거
+	// 물리 시뮬레이션 활성화 및 힘 적용
+	GetMesh()->SetSimulatePhysics(true);
+	FVector LaunchDirection = FVector(FMath::RandRange(-1.0f, 1.0f), FMath::RandRange(-1.0f, 1.0f), 1.0f);
+	LaunchDirection.Normalize();
+	FVector LaunchForce = LaunchDirection * 1000.0f; // 힘의 크기 조절
+	GetMesh()->AddImpulse(LaunchForce);
+
+	// 일정 시간 후 파괴
+	SetLifeSpan(1.0f); // 1초 후에 파괴
 	
+	// 죽을 때 펑 VFX
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SmokeVFX, GetActorLocation());
+
 	// 적의 모든 컴포넌트를 비활성화
 	SetActorHiddenInGame(true);
 	SetActorEnableCollision(false);
 	SetActorTickEnabled(false);
+
+	//Destroy();  // 적을 제거
 
 	// 모든 메쉬 컴포넌트 비활성화
 	TArray<UActorComponent*> Components;
@@ -242,5 +251,22 @@ void AG_Enemy1::UpdateAnimation(float DeltaTime)
 		break;
 	default:
 		break;
+	}
+}
+
+void AG_Enemy1::StartBlinkEffect()
+{
+	if (UMaterialInstanceDynamic* MatInstance = GetMesh()->CreateAndSetMaterialInstanceDynamic(0))
+	{
+		MatInstance->SetScalarParameterValue(FName("BlinkAmount"), 1.0f); // 깜박이기 시작
+	}
+	GetWorldTimerManager().SetTimer(BlinkTimerHandle, this, &AG_Enemy1::StopBlinkEffect, 0.1f, false); // 0.1초 후에 깜박임 종료
+}
+
+void AG_Enemy1::StopBlinkEffect()
+{
+	if (UMaterialInstanceDynamic* MatInstance = GetMesh()->CreateAndSetMaterialInstanceDynamic(0))
+	{
+		MatInstance->SetScalarParameterValue(FName("BlinkAmount"), 0.0f); // 깜박임 종료
 	}
 }
