@@ -11,22 +11,27 @@ void UKirbySwordAttackAnimNotifyState::NotifyBegin(USkeletalMeshComponent* MeshC
 
 	//UBoxComponent* MeshComponent = KirbyCha->FindComponentByClass<UBoxComponent>();
 
-	TArray<AActor*> AttachedActors;
-	KirbyCha->GetAttachedActors(AttachedActors);
-
-	for (AActor* AttachedActor : AttachedActors)
+	if (KirbyCha)
 	{
-		if (AttachedActor->ActorHasTag(FName("Sword")))
+		TArray<AActor*> AttachedActors;
+		KirbyCha->GetAttachedActors(AttachedActors);
+
+		for (AActor* AttachedActor : AttachedActors)
 		{
-			UBoxComponent* BoxComponent = AttachedActor->FindComponentByClass<UBoxComponent>();
+			if (AttachedActor->ActorHasTag(FName("Sword")))
+			{
+				UBoxComponent* BoxComponent = AttachedActor->FindComponentByClass<UBoxComponent>();
 
-			BoxComponent->SetBoxExtent(FVector(900, 900, 900));
+				BoxComponent->SetBoxExtent(FVector(900, 900, 900));
 
-			//콜리전 채널 설정 변경
+				//콜리전 채널 설정 변경
 
-			BoxComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Overlap);
+				BoxComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Overlap);
+			}
 		}
 	}
+
+	
 
 
 }
@@ -41,20 +46,25 @@ void UKirbySwordAttackAnimNotifyState::NotifyEnd(USkeletalMeshComponent* MeshCom
 
 	//다시 원상복구
 
-	TArray<AActor*> AttachedActors;
-	KirbyCha->GetAttachedActors(AttachedActors);
-
-	for (AActor* AttachedActor : AttachedActors)
+	if (KirbyCha)
 	{
-		if (AttachedActor->ActorHasTag(FName("Sword")))
+		TArray<AActor*> AttachedActors;
+		KirbyCha->GetAttachedActors(AttachedActors);
+
+		for (AActor* AttachedActor : AttachedActors)
 		{
-			UBoxComponent* BoxComponent = AttachedActor->FindComponentByClass<UBoxComponent>();
+			if (AttachedActor->ActorHasTag(FName("Sword")))
+			{
+				UBoxComponent* BoxComponent = AttachedActor->FindComponentByClass<UBoxComponent>();
 
-			BoxComponent->SetBoxExtent(FVector(300, 300, 900));
+				BoxComponent->SetBoxExtent(FVector(300, 300, 900));
 
-			//콜리전 채널 설정 변경
+				//콜리전 채널 설정 변경
 
-			BoxComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Ignore);
+				BoxComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Ignore);
+			}
 		}
 	}
+
+	
 }
