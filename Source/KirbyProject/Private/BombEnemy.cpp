@@ -285,7 +285,7 @@ void ABombEnemy::StartBlinkEffect()
     {
         MatInstance->SetScalarParameterValue(FName("BlinkAmount"), 1.0f); // 깜박이기 시작
     }
-    GetWorldTimerManager().SetTimer(BlinkTimerHandle, this, &ABombEnemy::StopBlinkEffect, 0.1f, false); // 0.1초 후에 깜박임 종료
+    GetWorldTimerManager().SetTimer(BlinkTimerHandle, this, &ABombEnemy::StopBlinkEffect, 2.0f, false); // 2초 후에 깜박임 종료
 }
 
 void ABombEnemy::StopBlinkEffect()
