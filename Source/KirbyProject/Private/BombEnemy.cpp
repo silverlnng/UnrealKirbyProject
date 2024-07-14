@@ -28,6 +28,8 @@ ABombEnemy::ABombEnemy()
     //DetectionCapsule->SetCollisionProfileName(TEXT("Trigger"));
     //DetectionCapsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     //DetectionCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABombEnemy::OnOverlapBegin);
+
+    CurrentState = EEnemyState::Idle;  // 초기 상태를 Idle로 설정
 }
 
 void ABombEnemy::BeginPlay()

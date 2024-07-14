@@ -83,7 +83,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="Animation") 
 	UAnimMontage* DeathAnimMontage;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "G_Enemy1")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BombEnemy")
 	EEnemyState CurrentState;
 
     // 별 VFX (맞을 때)
