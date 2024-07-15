@@ -111,4 +111,6 @@ private:
     FTimerHandle TimerHandle;
     
     void ResetMaterial();
+
+    void KnockBack(class AActor* actor);
 };

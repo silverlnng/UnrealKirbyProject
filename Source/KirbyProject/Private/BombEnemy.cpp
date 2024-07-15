@@ -9,6 +9,9 @@
 #include "DeathAnimNotify.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Components/PrimitiveComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "GameFramework/Character.h"
 
 ABombEnemy::ABombEnemy()
 {
@@ -139,6 +142,7 @@ void ABombEnemy::OnHit(float Damage)
     UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), StarVFX, GetActorLocation());
     StartBlinkEffect(); // 데미지 입을 때 깜박이기 시작
     GetMesh()->UPrimitiveComponent::SetMaterial(0, DamageMaterial);
+    KnockBack(this); // 넉백
     Health -= Damage;
     if (Health <= 0)
     {
@@ -306,4 +310,16 @@ void ABombEnemy::StopBlinkEffect()
 void ABombEnemy::ResetMaterial()
 {
     GetMesh()->UPrimitiveComponent::SetMaterial(0, OriginalMaterial);
+}
+
+void ABombEnemy::KnockBack(class AActor* actor)
+{
+    FVector LaunchVelocity = UKismetMathLibrary::GetDirectionUnitVector(actor->GetActorLocation(), GetActorLocation()) * (-500);
+    
+    
+    if (UKismetSystemLibrary::IsValid(actor))
+    {
+        ACharacter::LaunchCharacter(LaunchVelocity, true, false);
+    }
+
 }

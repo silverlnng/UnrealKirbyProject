@@ -10,6 +10,9 @@
 #include "DeathAnimNotify.h"
 #include "AIController.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "GameFramework/Character.h"
 
 
 AG_Enemy1::AG_Enemy1()
@@ -125,6 +128,7 @@ void AG_Enemy1::Damage(float DamageAmount)
 {
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), StarVFX, GetActorLocation());
 	StartBlinkEffect(); // 데미지 입을 때 깜박이기 시작
+	KnockBack(this); // 넉백
 	Health -= DamageAmount;
 	if (Health <= 0)
 	{
@@ -269,4 +273,16 @@ void AG_Enemy1::StopBlinkEffect()
 	{
 		MatInstance->SetScalarParameterValue(FName("BlinkAmount"), 0.0f); // 깜박임 종료
 	}
+}
+
+void AG_Enemy1::KnockBack(class AActor* actor)
+{
+	FVector LaunchVelocity = UKismetMathLibrary::GetDirectionUnitVector(actor->GetActorLocation(), GetActorLocation()) * (-500);
+
+
+	if (UKismetSystemLibrary::IsValid(actor))
+	{
+		ACharacter::LaunchCharacter(LaunchVelocity, true, false);
+	}
+
 }
