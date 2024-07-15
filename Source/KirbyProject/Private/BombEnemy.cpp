@@ -8,6 +8,7 @@
 #include "AttackAnimNotify.h"
 #include "DeathAnimNotify.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Components/PrimitiveComponent.h"
 
 ABombEnemy::ABombEnemy()
 {
@@ -137,11 +138,15 @@ void ABombEnemy::OnHit(float Damage)
 {
     UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), StarVFX, GetActorLocation());
     StartBlinkEffect(); // 데미지 입을 때 깜박이기 시작
+    GetMesh()->UPrimitiveComponent::SetMaterial(0, DamageMaterial);
     Health -= Damage;
     if (Health <= 0)
     {
         Die();
     }
+
+    // 일정 시간 후에 재질을 원래 재질로 되돌리는 타이머 설정
+    GetWorldTimerManager().SetTimer(TimerHandle, this, &ABombEnemy::ResetMaterial, 0.2f, false);
 }
 
 void ABombEnemy::Die()
@@ -296,4 +301,9 @@ void ABombEnemy::StopBlinkEffect()
     {
         MatInstance->SetScalarParameterValue(FName("BlinkAmount"), 0.0f); // 깜박임 종료
     }
+}
+
+void ABombEnemy::ResetMaterial()
+{
+    GetMesh()->UPrimitiveComponent::SetMaterial(0, OriginalMaterial);
 }

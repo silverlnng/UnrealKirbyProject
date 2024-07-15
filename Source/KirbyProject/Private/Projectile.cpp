@@ -18,8 +18,8 @@ AProjectile::AProjectile()
 	ProjectileMesh->SetupAttachment(RootComponent);
 
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
-	ProjectileMovement->InitialSpeed = 2000.0f;
-	ProjectileMovement->MaxSpeed = 2000.0f;
+	ProjectileMovement->InitialSpeed = 500.0f;
+	ProjectileMovement->MaxSpeed = 500.0f;
 
 	ProjectileMovement->ProjectileGravityScale = 0.0f; // 중력 영향 안 받도록
 	ProjectileMovement->bRotationFollowsVelocity = true;
