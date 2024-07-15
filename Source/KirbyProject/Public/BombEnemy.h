@@ -28,8 +28,7 @@ private:
     UPROPERTY(EditDefaultsOnly, Category = "BombEnemy")
     TSubclassOf<class AActor> CoinClass;  // 코인 클래스 선언
 
-    //UPROPERTY(VisibleAnywhere, Category = Collision)
-    //class UCapsuleComponent* DetectionCapsule;
+ 
 
     FTimerHandle BombTimerHandle;
 
