@@ -151,7 +151,7 @@ void AG_Enemy1::Die()
 	GetMesh()->AddImpulse(LaunchForce);
 
 	// 일정 시간 후 파괴
-	SetLifeSpan(1.0f); // 1초 후에 파괴
+	//SetLifeSpan(1.0f); // 1초 후에 파괴
 	
 	// 죽을 때 펑 VFX
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SmokeVFX, GetActorLocation());
