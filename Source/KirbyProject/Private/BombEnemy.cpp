@@ -19,7 +19,7 @@ ABombEnemy::ABombEnemy()
     //BombMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
     BombRange = 1000.0f; // 플레이어가 다가와야 하는 거리
-    BombInterval = 1.0f; // 불을 쏘는 간격
+    BombInterval = 0.5f; // 불을 쏘는 간격
     Health = 3.0f;  // 초기 체력 설정
 
     //// 콜리전 캡슐 추가
