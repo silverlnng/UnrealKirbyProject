@@ -33,6 +33,7 @@ protected:
 	void Idle(); // 기본 상태
 	void CheckAttackCondition();
 	void Attack(float DeltaTime); // 적이 공격할 때
+	UFUNCTION(BlueprintCallable) // 보스맵에서 불러와야 해서
 	void Die();  // 적이 죽을 때
 
 	void UpdateAnimation(float DeltaTime);  // 상태에 따른 애니메이션 업데이트
