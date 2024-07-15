@@ -19,7 +19,7 @@ ABombEnemy::ABombEnemy()
     //BombMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
     BombRange = 1000.0f; // 플레이어가 다가와야 하는 거리
-    BombInterval = 1.0f; // 불을 쏘는 간격
+    BombInterval = 0.5f; // 불을 쏘는 간격
     Health = 3.0f;  // 초기 체력 설정
 
     //// 콜리전 캡슐 추가
@@ -28,6 +28,8 @@ ABombEnemy::ABombEnemy()
     //DetectionCapsule->SetCollisionProfileName(TEXT("Trigger"));
     //DetectionCapsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     //DetectionCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABombEnemy::OnOverlapBegin);
+
+    CurrentState = EEnemyState::Idle;  // 초기 상태를 Idle로 설정
 }
 
 void ABombEnemy::BeginPlay()
@@ -285,7 +287,7 @@ void ABombEnemy::StartBlinkEffect()
     {
         MatInstance->SetScalarParameterValue(FName("BlinkAmount"), 1.0f); // 깜박이기 시작
     }
-    GetWorldTimerManager().SetTimer(BlinkTimerHandle, this, &ABombEnemy::StopBlinkEffect, 0.1f, false); // 0.1초 후에 깜박임 종료
+    GetWorldTimerManager().SetTimer(BlinkTimerHandle, this, &ABombEnemy::StopBlinkEffect, 2.0f, false); // 2초 후에 깜박임 종료
 }
 
 void ABombEnemy::StopBlinkEffect()
