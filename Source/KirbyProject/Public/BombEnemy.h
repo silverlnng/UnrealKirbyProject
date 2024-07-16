@@ -101,4 +101,16 @@ private:
     FTimerHandle BlinkTimerHandle;
     void StartBlinkEffect();
     void StopBlinkEffect();
+
+    UPROPERTY(EditAnywhere)
+    UMaterialInterface* DamageMaterial;
+
+    UPROPERTY(EditAnywhere)
+    UMaterialInterface* OriginalMaterial;
+
+    FTimerHandle TimerHandle;
+    
+    void ResetMaterial();
+
+    void KnockBack(class AActor* actor);
 };

@@ -85,4 +85,6 @@ private:
 	FTimerHandle BlinkTimerHandle;
 	void StartBlinkEffect();
 	void StopBlinkEffect();
+
+	void KnockBack(class AActor* actor);
 };
