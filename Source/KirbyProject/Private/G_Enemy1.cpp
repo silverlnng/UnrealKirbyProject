@@ -74,7 +74,7 @@ void AG_Enemy1::CheckAttackCondition()
 	{
 		float DistanceToPlayer = FVector::Dist(GetActorLocation(), PlayerPawn->GetActorLocation());
 
-		UE_LOG(LogTemp, Warning, TEXT("Distance to Player: %f"), DistanceToPlayer); // 디버그 메시지 추가
+		//UE_LOG(LogTemp, Warning, TEXT("Distance to Player: %f"), DistanceToPlayer); // 디버그 메시지 추가
 
 		if (DistanceToPlayer <= attackRange)
 		{
