@@ -12,6 +12,7 @@ AFireEnemy::AFireEnemy()
 
 	Root = CreateDefaultSubobject<UBoxComponent>(TEXT("Root"));
 	SetRootComponent(Root);
+	Root->SetBoxExtent(FVector(75, 75, 75));
 
 	FireMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FireMesh"));
 	FireMesh->SetupAttachment(Root);
