@@ -12,7 +12,7 @@ class KIRBYPROJECT_API AFireEnemy : public AActor
     GENERATED_BODY()
 
 private:
-    UPROPERTY(VisibleAnywhere)
+    UPROPERTY(EditDefaultsOnly)
     UBoxComponent* Root;
 
     UPROPERTY(EditDefaultsOnly, Category = "FireEnemy")
