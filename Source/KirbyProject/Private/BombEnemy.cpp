@@ -182,29 +182,18 @@ void ABombEnemy::OnHit(float Damage)
     KnockBack(this); // 넉백
 
     Health -= Damage;
-    if (Health <= 0)
-    {
-        Die();
-    }
-
+    
     // 일정 시간 후에 재질을 원래 재질로 되돌리는 타이머 설정
     GetWorldTimerManager().SetTimer(TimerHandle, this, &ABombEnemy::ResetMaterial, 0.2f, false);
+
+    if (Health <= 0)
+    {
+        SetState(EEnemyState::Dead);
+    }
 }
 
 void ABombEnemy::Die()
 {
-    SetState(EEnemyState::Dead);
-
-    // 물리 시뮬레이션 활성화 및 힘 적용 -> 날아가는 효과
-    GetMesh()->SetSimulatePhysics(true);
-    FVector LaunchDirection = FVector(FMath::RandRange(-1.0f, 1.0f), FMath::RandRange(-1.0f, 1.0f), 1.0f);
-    LaunchDirection.Normalize();
-    FVector LaunchForce = LaunchDirection * 1000.0f; // 힘의 크기 조절
-    GetMesh()->AddImpulse(LaunchForce);
-
-    // 일정 시간 후 파괴
-    SetLifeSpan(2.0f); // 2초 후에 파괴
-
     if (CoinClass)
     {
         FVector SpawnLocation = GetActorLocation();
@@ -213,7 +202,10 @@ void ABombEnemy::Die()
     }
     // 죽을 때 펑
     UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SmokeVFX, GetActorLocation());
-    Destroy();  // 적을 제거
+    
+    // 일정 시간 후 파괴
+    SetLifeSpan(2.0f); // 2초 후에 파괴
+    Destroy();
 }
 
 // 이 부분은 사용 안 하는 것 같은데...............맞나
@@ -355,12 +347,12 @@ void ABombEnemy::ResetMaterial()
 
 void ABombEnemy::KnockBack(class AActor* actor)
 {
-    FVector LaunchVelocity = UKismetMathLibrary::GetDirectionUnitVector(actor->GetActorLocation(), GetActorLocation()) * (-500);
+    FVector LaunchVelocity = UKismetMathLibrary::GetDirectionUnitVector(GetActorLocation(), PlayerPawn->GetActorLocation()) * 500.0f;
     
     
-    if (UKismetSystemLibrary::IsValid(actor))
+    if (ACharacter* Character = Cast<ACharacter>(this))
     {
-        ACharacter::LaunchCharacter(LaunchVelocity, true, false);
+        Character->LaunchCharacter(LaunchVelocity, true, false);
     }
 
 }
