@@ -21,7 +21,7 @@ ABombEnemy::ABombEnemy()
     BombInterval = 1.70f; // 폭탄 spawn되는 간격
     Health = 3.0f;  // 초기 체력 설정
 
-    BombThrowDelay = 0.1f; // 폭탄 던지기까지 대기 시간
+    BombThrowDelay = 0.3f; // 폭탄 던지기까지 대기 시간
     HoldBomb = nullptr; // 들고있는 폭탄
 
     CurrentState = EEnemyState::Idle;  // 초기 상태를 Idle로 설정
@@ -62,11 +62,15 @@ void ABombEnemy::SetState(EEnemyState NewState)
         {
         case EEnemyState::Idle:
             Idle();
+            GetWorldTimerManager().ClearTimer(BombTimerHandle);  // Idle 상태일 때 타이머 중지
             break;
         case EEnemyState::Attack:
             PlayAnimMontage(AttackAnimMontage);
             // attack시작 후 BombInterval 시간 뒤에 StartThrowingBomb으로 폭탄 spawn
-            GetWorldTimerManager().SetTimer(BombTimerHandle, this, &ABombEnemy::StartThrowingBomb, BombInterval, true);
+            if (!GetWorldTimerManager().IsTimerActive(BombTimerHandle))
+            {
+                GetWorldTimerManager().SetTimer(BombTimerHandle, this, &ABombEnemy::StartThrowingBomb, BombInterval, true);
+            }
             break;
         case EEnemyState::Dead:
             PlayAnimMontage(DeathAnimMontage);
@@ -94,7 +98,6 @@ void ABombEnemy::CheckBombCondition()
         if (DistanceToPlayer <= BombRange)
         {
             SetState(EEnemyState::Attack);  // 공격 상태로 전환
-            
         }
         else
         {
@@ -135,7 +138,7 @@ void ABombEnemy::ThrowBomb()
         UE_LOG(LogTemp, Log, TEXT("Bomb Thrown at: %s"), *NowStr);
 
         // 폭탄에 전방 속도 추가
-        FVector ForwardVelocity = GetActorForwardVector() * 800.0f;
+        FVector ForwardVelocity = GetActorForwardVector() * 500.0f;
         UPrimitiveComponent* BombComponent = Cast<UPrimitiveComponent>(HoldBomb->GetRootComponent());
         if (BombComponent)
         {
@@ -179,7 +182,7 @@ void ABombEnemy::OnHit(float Damage)
         GetMesh()->UPrimitiveComponent::SetMaterial(0, DamageMaterial);
     }
 
-    KnockBack(this); // 넉백
+    KnockBack(); // 넉백
 
     Health -= Damage;
     
@@ -345,7 +348,7 @@ void ABombEnemy::ResetMaterial()
     }
 }
 
-void ABombEnemy::KnockBack(class AActor* actor)
+void ABombEnemy::KnockBack()
 {
     FVector LaunchVelocity = UKismetMathLibrary::GetDirectionUnitVector(GetActorLocation(), PlayerPawn->GetActorLocation()) * 500.0f;
     

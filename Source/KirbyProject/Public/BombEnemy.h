@@ -116,5 +116,5 @@ private:
     
     void ResetMaterial();
 
-    void KnockBack(class AActor* actor);
+    void KnockBack();
 };
