@@ -18,10 +18,10 @@ ABombEnemy::ABombEnemy()
     PrimaryActorTick.bCanEverTick = true;
 
     BombRange = 1000.0f; // 플레이어가 다가와야 하는 거리
-    BombInterval = 1.95f; // 폭탄 spawn되는 간격
+    BombInterval = 1.70f; // 폭탄 spawn되는 간격
     Health = 3.0f;  // 초기 체력 설정
 
-    BombThrowDelay = 1.7f; // 폭탄 던지기까지 대기 시간
+    BombThrowDelay = 0.1f; // 폭탄 던지기까지 대기 시간
     HoldBomb = nullptr; // 들고있는 폭탄
 
     CurrentState = EEnemyState::Idle;  // 초기 상태를 Idle로 설정
@@ -34,7 +34,7 @@ void ABombEnemy::BeginPlay()
     // PlayerPawn 변수를 초기화합니다
     PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 
-    GetWorldTimerManager().SetTimer(BombTimerHandle, this, &ABombEnemy::CheckBombCondition, BombInterval, true);
+    //GetWorldTimerManager().SetTimer(BombTimerHandle, this, &ABombEnemy::CheckBombCondition, BombInterval, true);
 
     OriginalMaterial = GetMesh()->GetMaterial(0);
 
@@ -49,6 +49,7 @@ void ABombEnemy::Tick(float DeltaTime)
         RotateToPlayer(DeltaTime);  // 매 프레임마다 플레이어를 향해 회전
     }
 
+    CheckBombCondition();
     UpdateAnimation(DeltaTime);
 }
 
@@ -64,6 +65,8 @@ void ABombEnemy::SetState(EEnemyState NewState)
             break;
         case EEnemyState::Attack:
             PlayAnimMontage(AttackAnimMontage);
+            // attack시작 후 BombInterval 시간 뒤에 StartThrowingBomb으로 폭탄 spawn
+            GetWorldTimerManager().SetTimer(BombTimerHandle, this, &ABombEnemy::StartThrowingBomb, BombInterval, true);
             break;
         case EEnemyState::Dead:
             PlayAnimMontage(DeathAnimMontage);
@@ -90,8 +93,8 @@ void ABombEnemy::CheckBombCondition()
 
         if (DistanceToPlayer <= BombRange)
         {
-            StartThrowingBomb();
-            SetState(EEnemyState::Attack);
+            SetState(EEnemyState::Attack);  // 공격 상태로 전환
+            
         }
         else
         {
@@ -107,9 +110,14 @@ void ABombEnemy::StartThrowingBomb()
         FVector BombLocation = GetMesh()->GetSocketLocation(FName("BombEnemySocket"));
         FRotator BombRotation = GetMesh()->GetSocketRotation(FName("BombEnemySocket"));
 
-        AActor* SpawnedBomb = GetWorld()->SpawnActor<ABombProjectile>(BombProjectileClass, BombLocation, BombRotation);
+        HoldBomb = GetWorld()->SpawnActor<ABombProjectile>(BombProjectileClass, BombLocation, BombRotation);
 
 		if (HoldBomb) {
+            // 폭탄을 생성한 시간 로그 출력
+            FDateTime Now = FDateTime::Now();
+            FString NowStr = Now.ToString();
+            UE_LOG(LogTemp, Log, TEXT("Bomb Spawned at: %s"), *NowStr);
+
 			// 들고 있다가 일정 시간 후에 ThrowBomb 함수를 호출하는 타이머 설정
 			GetWorldTimerManager().SetTimer(TimerHandle, this, &ABombEnemy::ThrowBomb, BombThrowDelay, false);
 		}
@@ -121,8 +129,13 @@ void ABombEnemy::ThrowBomb()
 {
     if (HoldBomb)
     {
+        // 폭탄 던지기 시간 로그 출력
+        FDateTime Now = FDateTime::Now();
+        FString NowStr = Now.ToString();
+        UE_LOG(LogTemp, Log, TEXT("Bomb Thrown at: %s"), *NowStr);
+
         // 폭탄에 전방 속도 추가
-        FVector ForwardVelocity = GetActorForwardVector() * 1000.0f;
+        FVector ForwardVelocity = GetActorForwardVector() * 800.0f;
         UPrimitiveComponent* BombComponent = Cast<UPrimitiveComponent>(HoldBomb->GetRootComponent());
         if (BombComponent)
         {
@@ -299,11 +312,12 @@ void ABombEnemy::UpdateAnimation(float DeltaTime)
     switch (CurrentState)
     {
     case EEnemyState::Idle:
-        // Idle 상태에서 실행할 로직
+        Idle();
         break;
     case EEnemyState::Attack:
         // Attack 상태에서 실행할 로직
-        RotateToPlayer(DeltaTime);
+        //RotateToPlayer(DeltaTime);
+        PlayAnimMontage(AttackAnimMontage);
         break;
     case EEnemyState::Dead:
         // Dead 상태에서 실행할 로직
