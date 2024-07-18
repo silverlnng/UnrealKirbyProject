@@ -17,21 +17,12 @@ ABombEnemy::ABombEnemy()
 {
     PrimaryActorTick.bCanEverTick = true;
 
-    //BombMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BombMesh"));
-
-    //BombMesh->SetSimulatePhysics(true);
-    //BombMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-
     BombRange = 1000.0f; // 플레이어가 다가와야 하는 거리
-    BombInterval = 0.5f; // 불을 쏘는 간격
+    BombInterval = 1.70f; // 폭탄 spawn되는 간격
     Health = 3.0f;  // 초기 체력 설정
 
-    //// 콜리전 캡슐 추가
-    //DetectionCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("DetectionCapsule"));
-    //DetectionCapsule->InitCapsuleSize(55.0f, 96.0f);
-    //DetectionCapsule->SetCollisionProfileName(TEXT("Trigger"));
-    //DetectionCapsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-    //DetectionCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABombEnemy::OnOverlapBegin);
+    BombThrowDelay = 0.3f; // 폭탄 던지기까지 대기 시간
+    HoldBomb = nullptr; // 들고있는 폭탄
 
     CurrentState = EEnemyState::Idle;  // 초기 상태를 Idle로 설정
 }
@@ -43,7 +34,9 @@ void ABombEnemy::BeginPlay()
     // PlayerPawn 변수를 초기화합니다
     PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 
-    GetWorldTimerManager().SetTimer(BombTimerHandle, this, &ABombEnemy::CheckBombCondition, BombInterval, true);
+    //GetWorldTimerManager().SetTimer(BombTimerHandle, this, &ABombEnemy::CheckBombCondition, BombInterval, true);
+
+    OriginalMaterial = GetMesh()->GetMaterial(0);
 
     InitAnimation();
 }
@@ -56,6 +49,7 @@ void ABombEnemy::Tick(float DeltaTime)
         RotateToPlayer(DeltaTime);  // 매 프레임마다 플레이어를 향해 회전
     }
 
+    CheckBombCondition();
     UpdateAnimation(DeltaTime);
 }
 
@@ -68,9 +62,15 @@ void ABombEnemy::SetState(EEnemyState NewState)
         {
         case EEnemyState::Idle:
             Idle();
+            GetWorldTimerManager().ClearTimer(BombTimerHandle);  // Idle 상태일 때 타이머 중지
             break;
         case EEnemyState::Attack:
             PlayAnimMontage(AttackAnimMontage);
+            // attack시작 후 BombInterval 시간 뒤에 StartThrowingBomb으로 폭탄 spawn
+            if (!GetWorldTimerManager().IsTimerActive(BombTimerHandle))
+            {
+                GetWorldTimerManager().SetTimer(BombTimerHandle, this, &ABombEnemy::StartThrowingBomb, BombInterval, true);
+            }
             break;
         case EEnemyState::Dead:
             PlayAnimMontage(DeathAnimMontage);
@@ -82,11 +82,13 @@ void ABombEnemy::SetState(EEnemyState NewState)
     }
 }
 
+// Idle ----------------------------------------
 void ABombEnemy::Idle()
 {
     PlayAnimMontage(IdleAnimMontage);
 }
 
+// 폭탄 던지기 -----------------------------------------------------------------
 void ABombEnemy::CheckBombCondition()
 {
     if (PlayerPawn)
@@ -95,8 +97,7 @@ void ABombEnemy::CheckBombCondition()
 
         if (DistanceToPlayer <= BombRange)
         {
-            Bomb();
-            SetState(EEnemyState::Attack);
+            SetState(EEnemyState::Attack);  // 공격 상태로 전환
         }
         else
         {
@@ -105,18 +106,53 @@ void ABombEnemy::CheckBombCondition()
     }
 }
 
-void ABombEnemy::Bomb()
+void ABombEnemy::StartThrowingBomb()
 {
-    if (BombProjectileClass)
-    {
+    if(BombProjectileClass && !HoldBomb)
+	{   // 이 때 폭탄 spawn 해둠
         FVector BombLocation = GetMesh()->GetSocketLocation(FName("BombEnemySocket"));
         FRotator BombRotation = GetMesh()->GetSocketRotation(FName("BombEnemySocket"));
 
-        GetWorld()->SpawnActor<ABombProjectile>(BombProjectileClass, BombLocation, BombRotation);
+        HoldBomb = GetWorld()->SpawnActor<ABombProjectile>(BombProjectileClass, BombLocation, BombRotation);
+
+		if (HoldBomb) {
+            // 폭탄을 생성한 시간 로그 출력
+            FDateTime Now = FDateTime::Now();
+            FString NowStr = Now.ToString();
+            UE_LOG(LogTemp, Log, TEXT("Bomb Spawned at: %s"), *NowStr);
+
+			// 들고 있다가 일정 시간 후에 ThrowBomb 함수를 호출하는 타이머 설정
+			GetWorldTimerManager().SetTimer(TimerHandle, this, &ABombEnemy::ThrowBomb, BombThrowDelay, false);
+		}
+	}
+}
+
+// 이 때 던짐 (일정 시간 뒤에)
+void ABombEnemy::ThrowBomb()
+{
+    if (HoldBomb)
+    {
+        // 폭탄 던지기 시간 로그 출력
+        FDateTime Now = FDateTime::Now();
+        FString NowStr = Now.ToString();
+        UE_LOG(LogTemp, Log, TEXT("Bomb Thrown at: %s"), *NowStr);
+
+        // 폭탄에 전방 속도 추가
+        FVector ForwardVelocity = GetActorForwardVector() * 500.0f;
+        UPrimitiveComponent* BombComponent = Cast<UPrimitiveComponent>(HoldBomb->GetRootComponent());
+        if (BombComponent)
+        {
+            BombComponent->SetSimulatePhysics(true);
+            BombComponent->AddImpulse(ForwardVelocity, NAME_None, true);
+        }
+        
+        // 폭탄 던진 후에 HoldBomb 다시 초기화
+        HoldBomb = nullptr;
     }
 }
 
-// Attack
+
+// Attack --------------------------------------------------------------------
 void ABombEnemy::RotateToPlayer(float DeltaTime)
 {
     if (PlayerPawn)
@@ -140,43 +176,39 @@ void ABombEnemy::RotateToPlayer(float DeltaTime)
 void ABombEnemy::OnHit(float Damage)
 {
     UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), StarVFX, GetActorLocation());
-    StartBlinkEffect(); // 데미지 입을 때 깜박이기 시작
-    GetMesh()->UPrimitiveComponent::SetMaterial(0, DamageMaterial);
-    KnockBack(this); // 넉백
-    Health -= Damage;
-    if (Health <= 0)
+    // 데미지 입을 때 깜박이기 시작
+    if(DamageMaterial)
     {
-        Die();
+        GetMesh()->UPrimitiveComponent::SetMaterial(0, DamageMaterial);
     }
 
+    KnockBack(); // 넉백
+
+    Health -= Damage;
+    
     // 일정 시간 후에 재질을 원래 재질로 되돌리는 타이머 설정
     GetWorldTimerManager().SetTimer(TimerHandle, this, &ABombEnemy::ResetMaterial, 0.2f, false);
+
+    if (Health <= 0)
+    {
+        SetState(EEnemyState::Dead);
+    }
 }
 
 void ABombEnemy::Die()
 {
-    SetState(EEnemyState::Dead);
-
     if (CoinClass)
     {
         FVector SpawnLocation = GetActorLocation();
         FRotator SpawnRotation = GetActorRotation();
         GetWorld()->SpawnActor<AActor>(CoinClass, SpawnLocation, SpawnRotation);
     }
-
-    // 물리 시뮬레이션 활성화 및 힘 적용 -> 날아가는 효과
-    GetMesh()->SetSimulatePhysics(true);
-    FVector LaunchDirection = FVector(FMath::RandRange(-1.0f, 1.0f), FMath::RandRange(-1.0f, 1.0f), 1.0f);
-    LaunchDirection.Normalize();
-    FVector LaunchForce = LaunchDirection * 1000.0f; // 힘의 크기 조절
-    GetMesh()->AddImpulse(LaunchForce);
-
-    // 일정 시간 후 파괴
-    SetLifeSpan(1.0f); // 1초 후에 파괴
-
     // 죽을 때 펑
     UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SmokeVFX, GetActorLocation());
-    Destroy();  // 적을 제거
+    
+    // 일정 시간 후 파괴
+    SetLifeSpan(2.0f); // 2초 후에 파괴
+    Destroy();
 }
 
 // 이 부분은 사용 안 하는 것 같은데...............맞나
@@ -275,11 +307,12 @@ void ABombEnemy::UpdateAnimation(float DeltaTime)
     switch (CurrentState)
     {
     case EEnemyState::Idle:
-        // Idle 상태에서 실행할 로직
+        Idle();
         break;
     case EEnemyState::Attack:
         // Attack 상태에서 실행할 로직
-        RotateToPlayer(DeltaTime);
+        //RotateToPlayer(DeltaTime);
+        PlayAnimMontage(AttackAnimMontage);
         break;
     case EEnemyState::Dead:
         // Dead 상태에서 실행할 로직
@@ -290,36 +323,39 @@ void ABombEnemy::UpdateAnimation(float DeltaTime)
     }
 }
 
-void ABombEnemy::StartBlinkEffect()
-{
-    if (UMaterialInstanceDynamic* MatInstance = GetMesh()->CreateAndSetMaterialInstanceDynamic(0))
-    {
-        MatInstance->SetScalarParameterValue(FName("BlinkAmount"), 1.0f); // 깜박이기 시작
-    }
-    GetWorldTimerManager().SetTimer(BlinkTimerHandle, this, &ABombEnemy::StopBlinkEffect, 2.0f, false); // 2초 후에 깜박임 종료
-}
-
-void ABombEnemy::StopBlinkEffect()
-{
-    if (UMaterialInstanceDynamic* MatInstance = GetMesh()->CreateAndSetMaterialInstanceDynamic(0))
-    {
-        MatInstance->SetScalarParameterValue(FName("BlinkAmount"), 0.0f); // 깜박임 종료
-    }
-}
+//void ABombEnemy::StartBlinkEffect()
+//{
+//    if (UMaterialInstanceDynamic* MatInstance = GetMesh()->CreateAndSetMaterialInstanceDynamic(0))
+//    {
+//        MatInstance->SetScalarParameterValue(FName("BlinkAmount"), 1.0f); // 깜박이기 시작
+//    }
+//    GetWorldTimerManager().SetTimer(BlinkTimerHandle, this, &ABombEnemy::StopBlinkEffect, 2.0f, false); // 2초 후에 깜박임 종료
+//}
+//
+//void ABombEnemy::StopBlinkEffect()
+//{
+//    if (UMaterialInstanceDynamic* MatInstance = GetMesh()->CreateAndSetMaterialInstanceDynamic(0))
+//    {
+//        MatInstance->SetScalarParameterValue(FName("BlinkAmount"), 0.0f); // 깜박임 종료
+//    }
+//}
 
 void ABombEnemy::ResetMaterial()
 {
-    GetMesh()->UPrimitiveComponent::SetMaterial(0, OriginalMaterial);
+    if(OriginalMaterial)
+    {
+        GetMesh()->UPrimitiveComponent::SetMaterial(0, OriginalMaterial);
+    }
 }
 
-void ABombEnemy::KnockBack(class AActor* actor)
+void ABombEnemy::KnockBack()
 {
-    FVector LaunchVelocity = UKismetMathLibrary::GetDirectionUnitVector(actor->GetActorLocation(), GetActorLocation()) * (-500);
+    FVector LaunchVelocity = UKismetMathLibrary::GetDirectionUnitVector(GetActorLocation(), PlayerPawn->GetActorLocation()) * 500.0f;
     
     
-    if (UKismetSystemLibrary::IsValid(actor))
+    if (ACharacter* Character = Cast<ACharacter>(this))
     {
-        ACharacter::LaunchCharacter(LaunchVelocity, true, false);
+        Character->LaunchCharacter(LaunchVelocity, true, false);
     }
 
 }

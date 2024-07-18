@@ -19,7 +19,6 @@ private:
     UPROPERTY(EditDefaultsOnly, Category = "BombEnemy")
     float BombRange;
 
-    UPROPERTY(EditDefaultsOnly, Category = "BombEnemy")
     float BombInterval;
 
     UPROPERTY(EditDefaultsOnly, Category = "BombEnemy")
@@ -28,7 +27,6 @@ private:
     UPROPERTY(EditDefaultsOnly, Category = "BombEnemy")
     TSubclassOf<class AActor> CoinClass;  // 코인 클래스 선언
 
- 
 
     FTimerHandle BombTimerHandle;
 
@@ -94,13 +92,19 @@ public:
 
 private:
     void CheckBombCondition();
-    void Bomb();
+    void ThrowBomb();
+    void StartThrowingBomb();
     void RotateToPlayer(float DeltaTime);
 
+    AActor* HoldBomb; // 생성된 폭탄 저장하는 멤버 변수
+
+    UPROPERTY(EditAnywhere)
+    float BombThrowDelay;  // 폭탄 던지기까지 대기 시간
+
     // 맞을 때 하얗게 깜박이는 효과
-    FTimerHandle BlinkTimerHandle;
-    void StartBlinkEffect();
-    void StopBlinkEffect();
+    //FTimerHandle BlinkTimerHandle;
+    //void StartBlinkEffect();
+    //void StopBlinkEffect();
 
     UPROPERTY(EditAnywhere)
     UMaterialInterface* DamageMaterial;
@@ -112,5 +116,5 @@ private:
     
     void ResetMaterial();
 
-    void KnockBack(class AActor* actor);
+    void KnockBack();
 };
