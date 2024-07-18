@@ -52,8 +52,8 @@ void AProjectile::Tick(float DeltaTime)
 	float NewX = SpiralRadius * FMath::Sin(SpiralSpeed * ElapsedTime);
 	float NewZ = SpiralRadius * FMath::Cos(SpiralSpeed * ElapsedTime);
 
-	UE_LOG(LogTemp, Display, TEXT("X: %f"), NewX);
-	UE_LOG(LogTemp, Display, TEXT("Z: %f"), NewZ);
+	//UE_LOG(LogTemp, Display, TEXT("X: %f"), NewX);
+	//UE_LOG(LogTemp, Display, TEXT("Z: %f"), NewZ);
 
 	FVector ForwardVector = GetActorForwardVector() * ProjectileMovement->InitialSpeed * DeltaTime;
 	FVector NewLocation = ForwardVector + FVector(NewX, 0.0f, NewZ);
