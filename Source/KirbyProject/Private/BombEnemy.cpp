@@ -24,6 +24,8 @@ ABombEnemy::ABombEnemy()
     BombThrowDelay = 0.3f; // 폭탄 던지기까지 대기 시간
     HoldBomb = nullptr; // 들고있는 폭탄
 
+    DeadDelay = 0.5f; // 죽는 애니메이션 재생될 시간
+
     CurrentState = EEnemyState::Idle;  // 초기 상태를 Idle로 설정
 }
 
@@ -33,10 +35,6 @@ void ABombEnemy::BeginPlay()
 
     // PlayerPawn 변수를 초기화합니다
     PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-
-    //GetWorldTimerManager().SetTimer(BombTimerHandle, this, &ABombEnemy::CheckBombCondition, BombInterval, true);
-
-    OriginalMaterial = GetMesh()->GetMaterial(0);
 
     InitAnimation();
 }
@@ -74,7 +72,8 @@ void ABombEnemy::SetState(EEnemyState NewState)
             break;
         case EEnemyState::Dead:
             PlayAnimMontage(DeathAnimMontage);
-            Die();
+            KnockBack(); // 넉백
+            GetWorldTimerManager().SetTimer(TimerHandle, this, &ABombEnemy::Die, DeadDelay, false); // 애니메이션 재생하고 2초 뒤 죽음
             break;
         default:
             break;
@@ -176,18 +175,9 @@ void ABombEnemy::RotateToPlayer(float DeltaTime)
 void ABombEnemy::OnHit(float Damage)
 {
     UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), StarVFX, GetActorLocation());
-    // 데미지 입을 때 깜박이기 시작
-    if(DamageMaterial)
-    {
-        GetMesh()->UPrimitiveComponent::SetMaterial(0, DamageMaterial);
-    }
-
-    KnockBack(); // 넉백
+    // 데미지 입을 때 깜박이기 시작 -> 블루프린트로 수정
 
     Health -= Damage;
-    
-    // 일정 시간 후에 재질을 원래 재질로 되돌리는 타이머 설정
-    GetWorldTimerManager().SetTimer(TimerHandle, this, &ABombEnemy::ResetMaterial, 0.2f, false);
 
     if (Health <= 0)
     {
@@ -197,6 +187,8 @@ void ABombEnemy::OnHit(float Damage)
 
 void ABombEnemy::Die()
 {
+    KnockBack(); // 넉백
+
     if (CoinClass)
     {
         FVector SpawnLocation = GetActorLocation();
@@ -207,7 +199,6 @@ void ABombEnemy::Die()
     UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SmokeVFX, GetActorLocation());
     
     // 일정 시간 후 파괴
-    SetLifeSpan(2.0f); // 2초 후에 파괴
     Destroy();
 }
 
@@ -310,52 +301,33 @@ void ABombEnemy::UpdateAnimation(float DeltaTime)
         Idle();
         break;
     case EEnemyState::Attack:
-        // Attack 상태에서 실행할 로직
-        //RotateToPlayer(DeltaTime);
         PlayAnimMontage(AttackAnimMontage);
         break;
     case EEnemyState::Dead:
-        // Dead 상태에서 실행할 로직
-        Die();
+        PlayAnimMontage(DeathAnimMontage);
+        KnockBack(); // 넉백
+        GetWorldTimerManager().SetTimer(TimerHandle, this, &ABombEnemy::Die, DeadDelay, false); // 애니메이션 재생하고 2초 뒤 죽음
         break;
     default:
         break;
     }
 }
 
-//void ABombEnemy::StartBlinkEffect()
-//{
-//    if (UMaterialInstanceDynamic* MatInstance = GetMesh()->CreateAndSetMaterialInstanceDynamic(0))
-//    {
-//        MatInstance->SetScalarParameterValue(FName("BlinkAmount"), 1.0f); // 깜박이기 시작
-//    }
-//    GetWorldTimerManager().SetTimer(BlinkTimerHandle, this, &ABombEnemy::StopBlinkEffect, 2.0f, false); // 2초 후에 깜박임 종료
-//}
-//
-//void ABombEnemy::StopBlinkEffect()
-//{
-//    if (UMaterialInstanceDynamic* MatInstance = GetMesh()->CreateAndSetMaterialInstanceDynamic(0))
-//    {
-//        MatInstance->SetScalarParameterValue(FName("BlinkAmount"), 0.0f); // 깜박임 종료
-//    }
-//}
-
-void ABombEnemy::ResetMaterial()
-{
-    if(OriginalMaterial)
-    {
-        GetMesh()->UPrimitiveComponent::SetMaterial(0, OriginalMaterial);
-    }
-}
-
 void ABombEnemy::KnockBack()
 {
-    FVector LaunchVelocity = UKismetMathLibrary::GetDirectionUnitVector(GetActorLocation(), PlayerPawn->GetActorLocation()) * 500.0f;
+    FVector Direction = UKismetMathLibrary::GetDirectionUnitVector(GetActorLocation(), PlayerPawn->GetActorLocation());
+
+    Direction.X = -1.5f;
+    Direction.Y = 1.5f;
+    Direction.Z = 1.5f;
+    Direction.Normalize();
+
+    FVector LaunchVelocity = Direction * 500.0f;
     
     
     if (ACharacter* Character = Cast<ACharacter>(this))
     {
-        Character->LaunchCharacter(LaunchVelocity, true, false);
+        Character->LaunchCharacter(LaunchVelocity, true, true);
     }
 
 }

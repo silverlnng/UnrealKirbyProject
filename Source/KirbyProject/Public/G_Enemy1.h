@@ -4,6 +4,8 @@
 #include "GameFramework/Character.h"
 #include "Animation/AnimMontage.h"
 #include "Components/InputComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 #include "EnemyState.h" // E열거형 공유파일
 #include "G_Enemy1.generated.h"
 
@@ -32,6 +34,7 @@ protected:
 	void DeathAnimNotify();
 	void Idle(); // 기본 상태
 	void CheckAttackCondition();
+	UFUNCTION(BlueprintCallable)
 	void Attack(float DeltaTime); // 적이 공격할 때
 	UFUNCTION(BlueprintCallable) // 보스맵에서 불러와야 해서
 	void Die();  // 적이 죽을 때
@@ -77,14 +80,24 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effects")
 	class UParticleSystem* SmokeVFX;
 
+	// 나이아가라 컴포넌트
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Effects", meta = (AllowPrivateAccess = "true"))
+    UNiagaraComponent* NiagaraComponent;
+	void EnableNiagara();
+	float NiagaraInterval;
+	bool bCanSpawnNiagara;
+
 private:
 	// 공격 범위
     UPROPERTY(EditDefaultsOnly, Category = "G_Enemy1")
     float attackRange = 600.0f;
 
-	FTimerHandle BlinkTimerHandle;
-	void StartBlinkEffect();
-	void StopBlinkEffect();
+	void KnockBack();
 
-	void KnockBack(class AActor* actor);
+	float DeadDelay; // 죽는 애니메이션 재생될 시간
+
+	FTimerHandle TimerHandle;
+
+	// 이동 속도
+    float MoveSpeed;
 };
