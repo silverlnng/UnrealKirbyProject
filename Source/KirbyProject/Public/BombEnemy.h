@@ -101,20 +101,9 @@ private:
     UPROPERTY(EditAnywhere)
     float BombThrowDelay;  // 폭탄 던지기까지 대기 시간
 
-    // 맞을 때 하얗게 깜박이는 효과
-    //FTimerHandle BlinkTimerHandle;
-    //void StartBlinkEffect();
-    //void StopBlinkEffect();
-
-    UPROPERTY(EditAnywhere)
-    UMaterialInterface* DamageMaterial;
-
-    UPROPERTY(EditAnywhere)
-    UMaterialInterface* OriginalMaterial;
+    float DeadDelay; // 죽는 애니메이션 재생될 시간
 
     FTimerHandle TimerHandle;
-    
-    void ResetMaterial();
 
     void KnockBack();
 };
