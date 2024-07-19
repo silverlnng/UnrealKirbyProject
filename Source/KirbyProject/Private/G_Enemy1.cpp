@@ -19,7 +19,7 @@ AG_Enemy1::AG_Enemy1()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	MoveSpeed = 100.0f;
+	MoveSpeed = 70.0f;
 
 	DeadDelay = 1.0f; // 죽는 애니메이션 재생될 시간
 
@@ -30,7 +30,7 @@ AG_Enemy1::AG_Enemy1()
 	NiagaraComponent->SetupAttachment(RootComponent);
 	NiagaraComponent->SetAutoActivate(false); // 초기에는 비활성화 상태
 
-	NiagaraInterval = 0.5f;
+	NiagaraInterval = 0.3f;
 	bCanSpawnNiagara = true;
 }
 
@@ -138,6 +138,9 @@ void AG_Enemy1::Attack(float DeltaTime)
 					bCanSpawnNiagara = false;
 					GetWorldTimerManager().SetTimer(TimerHandle, this, &AG_Enemy1::EnableNiagara, NiagaraInterval, false); // 몇 초 간격으로 생성
 				}
+				// 이동 속도 조절
+				GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
+
 				AIController->MoveToActor(PlayerPawn, 1.0f); // 1.0f는 허용 오차 범위
 			}
 		}
