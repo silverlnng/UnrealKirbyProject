@@ -19,7 +19,19 @@ AG_Enemy1::AG_Enemy1()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	MoveSpeed = 70.0f;
+
+	DeadDelay = 1.0f; // 죽는 애니메이션 재생될 시간
+
 	CurrentState = EEnemyState::Idle;  // 초기 상태를 Idle로 설정
+
+	// Niagara 컴포넌트 초기화
+	NiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraComponent"));
+	NiagaraComponent->SetupAttachment(RootComponent);
+	NiagaraComponent->SetAutoActivate(false); // 초기에는 비활성화 상태
+
+	NiagaraInterval = 0.3f;
+	bCanSpawnNiagara = true;
 }
 
 void AG_Enemy1::BeginPlay()
@@ -48,6 +60,7 @@ void AG_Enemy1::SetState(EEnemyState NewState)
 		switch (NewState)
 		{
 		case EEnemyState::Idle:
+			NiagaraComponent->SetAutoActivate(false);
 			Idle();
 			break;
 		case EEnemyState::Attack:
@@ -55,7 +68,8 @@ void AG_Enemy1::SetState(EEnemyState NewState)
 			break;
 		case EEnemyState::Dead:
 			PlayAnimMontage(DeathAnimMontage);
-			Die();
+			KnockBack(); // 넉백
+			GetWorldTimerManager().SetTimer(TimerHandle, this, &AG_Enemy1::Die, DeadDelay, false); // 애니메이션 재생하고 2초 뒤 죽음
 			break;
 		default:
 			break;
@@ -109,16 +123,25 @@ void AG_Enemy1::Attack(float DeltaTime)
 
 			targetRotation.Yaw += -90.0f;
 
-			FRotator newRotation = FMath::RInterpTo(currentRotation, targetRotation, DeltaTime, 5.0f);  // 회전 속도 조정할 수 있음
+			FRotator newRotation = FMath::RInterpTo(currentRotation, targetRotation, DeltaTime, 100.0f);  // 회전 속도 조정할 수 있음
 			SetActorRotation(newRotation);
 
 			// AI 컨트롤러를 통해 플레이어를 향해 이동
 			AAIController* AIController = Cast<AAIController>(GetController());
 			if (AIController)
 			{
-				// 달릴 때 뭉게 효과
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SmokeVFX, GetActorLocation());
-				AIController->MoveToActor(PlayerPawn, 5.0f); // 5.0f는 허용 오차 범위
+				if (bCanSpawnNiagara)
+				{
+					// 달릴 때 뭉게 효과 나이아가라
+					NiagaraComponent->Activate(true);
+
+					bCanSpawnNiagara = false;
+					GetWorldTimerManager().SetTimer(TimerHandle, this, &AG_Enemy1::EnableNiagara, NiagaraInterval, false); // 몇 초 간격으로 생성
+				}
+				// 이동 속도 조절
+				GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
+
+				AIController->MoveToActor(PlayerPawn, 1.0f); // 1.0f는 허용 오차 범위
 			}
 		}
 	}
@@ -127,8 +150,7 @@ void AG_Enemy1::Attack(float DeltaTime)
 void AG_Enemy1::Damage(float DamageAmount)
 {
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), StarVFX, GetActorLocation());
-	StartBlinkEffect(); // 데미지 입을 때 깜박이기 시작
-	KnockBack(this); // 넉백
+
 	Health -= DamageAmount;
 	if (Health <= 0)
 	{
@@ -146,34 +168,11 @@ void AG_Enemy1::Die()
 		FRotator SpawnRotation = GetActorRotation();
 		GetWorld()->SpawnActor<AActor>(CoinClass, SpawnLocation, SpawnRotation);
 	}
-
-	// 물리 시뮬레이션 활성화 및 힘 적용
-	GetMesh()->SetSimulatePhysics(true);
-	FVector LaunchDirection = FVector(FMath::RandRange(-1.0f, 1.0f), FMath::RandRange(-1.0f, 1.0f), 1.0f);
-	LaunchDirection.Normalize();
-	FVector LaunchForce = LaunchDirection * 1000.0f; // 힘의 크기 조절
-	GetMesh()->AddImpulse(LaunchForce);
-
-	// 일정 시간 후 파괴
-	//SetLifeSpan(1.0f); // 1초 후에 파괴
 	
 	// 죽을 때 펑 VFX
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SmokeVFX, GetActorLocation());
 
-	// 적의 모든 컴포넌트를 비활성화
-	SetActorHiddenInGame(true);
-	SetActorEnableCollision(false);
-	SetActorTickEnabled(false);
-
-	//Destroy();  // 적을 제거
-
-	// 모든 메쉬 컴포넌트 비활성화
-	TArray<UActorComponent*> Components;
-	GetComponents(Components);
-	for (UActorComponent* Component : Components)
-	{
-		Component->Deactivate();
-	}	
+	Destroy();  // 적을 제거
 }
 
 
@@ -243,46 +242,42 @@ void AG_Enemy1::UpdateAnimation(float DeltaTime)
 	switch (CurrentState)
 	{
 	case EEnemyState::Idle:
-		// Idle 상태에서 실행할 로직
+		NiagaraComponent->SetAutoActivate(false);
+		Idle();
 		break;
 	case EEnemyState::Attack:
 		// Attack 상태에서 실행할 로직
 		Attack(DeltaTime);
 		break;
 	case EEnemyState::Dead:
-		// Dead 상태에서 실행할 로직
-		Die();
+		KnockBack(); // 넉백
+		GetWorldTimerManager().SetTimer(TimerHandle, this, &AG_Enemy1::Die, DeadDelay, false); // 애니메이션 재생하고 2초 뒤 죽음
 		break;
 	default:
 		break;
 	}
 }
 
-void AG_Enemy1::StartBlinkEffect()
+void AG_Enemy1::EnableNiagara()
 {
-	if (UMaterialInstanceDynamic* MatInstance = GetMesh()->CreateAndSetMaterialInstanceDynamic(0))
-	{
-		MatInstance->SetScalarParameterValue(FName("BlinkAmount"), 1.0f); // 깜박이기 시작
-	}
-	GetWorldTimerManager().SetTimer(BlinkTimerHandle, this, &AG_Enemy1::StopBlinkEffect, 2.0f, false); // 2초 후에 깜박임 종료
+	bCanSpawnNiagara = true;
 }
 
-void AG_Enemy1::StopBlinkEffect()
+void AG_Enemy1::KnockBack()
 {
-	if (UMaterialInstanceDynamic* MatInstance = GetMesh()->CreateAndSetMaterialInstanceDynamic(0))
+	FVector Direction = UKismetMathLibrary::GetDirectionUnitVector(GetActorLocation(), PlayerPawn->GetActorLocation());
+
+	Direction.X = -1.5f;
+	Direction.Y = 1.5f;
+	Direction.Z = 1.5f;
+	Direction.Normalize();
+
+	FVector LaunchVelocity = Direction * 500.0f;
+
+
+	if (ACharacter* Character = Cast<ACharacter>(this))
 	{
-		MatInstance->SetScalarParameterValue(FName("BlinkAmount"), 0.0f); // 깜박임 종료
-	}
-}
-
-void AG_Enemy1::KnockBack(class AActor* actor)
-{
-	FVector LaunchVelocity = UKismetMathLibrary::GetDirectionUnitVector(actor->GetActorLocation(), GetActorLocation()) * (-500);
-
-
-	if (UKismetSystemLibrary::IsValid(actor))
-	{
-		ACharacter::LaunchCharacter(LaunchVelocity, true, false);
+		Character->LaunchCharacter(LaunchVelocity, true, true);
 	}
 
 }
