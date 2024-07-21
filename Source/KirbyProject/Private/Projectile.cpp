@@ -27,6 +27,14 @@ AProjectile::AProjectile()
 
 	SpiralRadius = 50.0f; // 나선형 이동 반경
 	SpiralSpeed = 0.2f; // 나선형 이동 속도
+
+	// Niagara 컴포넌트 초기화
+	NiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraComponent"));
+	NiagaraComponent->SetupAttachment(RootComponent);
+	NiagaraComponent->SetAutoActivate(false); // 초기에는 비활성화 상태
+
+	NiagaraInterval = 0.3f;
+	bCanSpawnNiagara = true;
 }
 
 // Called when the game starts or when spawned
@@ -62,6 +70,15 @@ void AProjectile::Tick(float DeltaTime)
 	ProjectileMesh->SetRelativeLocation(NewLocation);
 
 	//CollisionComponent->K2_SetRelativeLocation(NewLocation, false, FHitResult * OutSweepHitResult = nullptr, ETeleportType Teleport = ETeleportType::None);
+
+	if (bCanSpawnNiagara)
+	{
+		// 달릴 때 뭉게 효과 나이아가라
+		NiagaraComponent->Activate(true);
+
+		bCanSpawnNiagara = false;
+		GetWorldTimerManager().SetTimer(TimerHandle, this, &AProjectile::EnableNiagara, NiagaraInterval, false); // 몇 초 간격으로 생성
+	}
 }
 
 void AProjectile::SpawnTrailEffect()
@@ -82,4 +99,9 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, U
 			Destroy();
 		}
 //	}
+}
+
+void AProjectile::EnableNiagara()
+{
+	bCanSpawnNiagara = true;
 }

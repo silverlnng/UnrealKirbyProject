@@ -4,6 +4,8 @@
 #include "GameFramework/Actor.h"
 #include "GameFramework/ProjectileMovementComponent.h" 
 #include "Components/SphereComponent.h" 
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 #include "Projectile.generated.h"
 
 UCLASS()
@@ -47,6 +49,13 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* ExplosionVFX;
 
+	// 나이아가라 컴포넌트
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Effects", meta = (AllowPrivateAccess = "true"))
+	UNiagaraComponent* NiagaraComponent;
+	void EnableNiagara();
+	float NiagaraInterval;
+	bool bCanSpawnNiagara;
+
 	// 회전 속도
     UPROPERTY(EditAnywhere, Category = "Movement")
     float SpiralSpeed; // 나선형 이동 속도
@@ -59,4 +68,6 @@ public:
 private:
 	// 게임 모드를 저장할 변수
 	AGameModeBase* GameModeBase;
+	// 타이머
+	FTimerHandle TimerHandle;
 };
