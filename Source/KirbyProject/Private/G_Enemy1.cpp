@@ -21,7 +21,7 @@ AG_Enemy1::AG_Enemy1()
 
 	MoveSpeed = 70.0f;
 
-	DeadDelay = 1.0f; // 죽는 애니메이션 재생될 시간
+	DeadDelay = 0.5f; // 죽는 애니메이션 재생될 시간
 
 	CurrentState = EEnemyState::Idle;  // 초기 상태를 Idle로 설정
 
@@ -154,13 +154,13 @@ void AG_Enemy1::Damage(float DamageAmount)
 	Health -= DamageAmount;
 	if (Health <= 0)
 	{
-		Die();
+		SetState(EEnemyState::Dead);
 	}
 }
 
 void AG_Enemy1::Die()
 {
-	SetState(EEnemyState::Dead);
+	KnockBack(); // 넉백
 
 	if (CoinClass)
 	{
@@ -172,7 +172,7 @@ void AG_Enemy1::Die()
 	// 죽을 때 펑 VFX
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SmokeVFX, GetActorLocation());
 
-	//Destroy();  // 적을 제거
+	Destroy();  // 적을 제거
 }
 
 
@@ -250,6 +250,7 @@ void AG_Enemy1::UpdateAnimation(float DeltaTime)
 		Attack(DeltaTime);
 		break;
 	case EEnemyState::Dead:
+		PlayAnimMontage(DeathAnimMontage);
 		KnockBack(); // 넉백
 		GetWorldTimerManager().SetTimer(TimerHandle, this, &AG_Enemy1::Die, DeadDelay, false); // 애니메이션 재생하고 2초 뒤 죽음
 		break;
@@ -269,7 +270,7 @@ void AG_Enemy1::KnockBack()
 
 	Direction.X = -1.5f;
 	Direction.Y = 1.5f;
-	Direction.Z = 1.5f;
+	Direction.Z = 2.0f;
 	Direction.Normalize();
 
 	FVector LaunchVelocity = Direction * 500.0f;

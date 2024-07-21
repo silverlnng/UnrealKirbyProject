@@ -53,6 +53,10 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* ExplosionVFX; 
 
+    // 발사 소리
+    UPROPERTY(EditAnywhere)
+    class USoundBase* ExplosionSound;
+
 private:
     void CheckFireCondition();
     void Fire();
