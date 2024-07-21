@@ -159,7 +159,7 @@ void AKirbyProjectCharacter::Look(const FInputActionValue& Value)
 
 void AKirbyProjectCharacter::SwordAttack_started()
 {
-	GEngine->AddOnScreenDebugMessage(0, 2, FColor::Cyan, TEXT("SwordAttack_started"));
+	//GEngine->AddOnScreenDebugMessage(0, 2, FColor::Cyan, TEXT("SwordAttack_started"));
 	// 타이머 작동
 	bSwordAttacking = true;
 
@@ -194,7 +194,7 @@ void AKirbyProjectCharacter::SwordAttack_started()
 void AKirbyProjectCharacter::SwordAttack_triggered()
 {
 	// 버튼을 일정시간 이상 동안 누르는 중이면 필살기를 위한 대기자세(애니메이션2)를 LOOP 로 실행 
-	UE_LOG(LogTemp, Warning, TEXT("%f"), AttackPressTime);
+	//UE_LOG(LogTemp, Warning, TEXT("%f"), AttackPressTime);
 
 	if (AttackPressTime >= SwordAttackTime*0.5f)
 	{
@@ -231,7 +231,7 @@ void AKirbyProjectCharacter::SwordAttack_completed()
 		//PlayAnimMontage(SwordAttackAnimMontage_1);
 		
 	}
-	UE_LOG(LogTemp, Warning, TEXT("%f"), AttackPressTime);
+	//UE_LOG(LogTemp, Warning, TEXT("%f"), AttackPressTime);
 
 	AttackPressTime = 0.f;		//타이머 리셋
 }
