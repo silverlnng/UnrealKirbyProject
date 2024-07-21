@@ -54,8 +54,11 @@ public:
 	class UParticleSystem* ExplosionVFX; 
 
     // 발사 소리
-    UPROPERTY(EditAnywhere)
-    class USoundBase* ExplosionSound;
+    UPROPERTY(EditDefaultsOnly, Category = "Sound")
+    USoundBase* ExplosionSound;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound", meta = (AllowPrivateAccess = "true"))
+    UAudioComponent* FireAudioComponent;
 
 private:
     void CheckFireCondition();

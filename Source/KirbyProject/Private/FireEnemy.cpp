@@ -3,6 +3,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Projectile.h" 
 #include "Components/TimelineComponent.h"
+#include "Components/AudioComponent.h"
 #include "Curves/CurveFloat.h"
 
 
@@ -17,7 +18,7 @@ AFireEnemy::AFireEnemy()
 	FireMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FireMesh"));
 	FireMesh->SetupAttachment(Root);
 
-	FireRange = 2000.0f; // 플레이어가 다가와야 하는 거리
+	FireRange = 1000.0f; // 플레이어가 다가와야 하는 거리
 	FireInterval = 1.5f; // 불을 쏘는 간격
 	Health = 3.0f;  // 초기 체력 설정
 
@@ -29,6 +30,11 @@ AFireEnemy::AFireEnemy()
 	{
 		ScaleCurve = Curve.Object;
 	}
+
+	// 오디오 컴포넌트 초기화 -------------------------------------------------------------
+	FireAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("FireAudioComponent"));
+	FireAudioComponent->SetupAttachment(Root);
+	FireAudioComponent->bAutoActivate = false; // 초기에는 비활성화 상태
 
 	ProjectileCount = 0;
 }
@@ -76,6 +82,10 @@ void AFireEnemy::CheckFireCondition()
 			// 시퀀스를 시작합니다.
 			StartSequence();
 		}
+		else
+		{
+			StopSequence();
+		}
 	}
 }
 
@@ -104,7 +114,11 @@ void AFireEnemy::Fire()
 		}
 
 		// 발사 소리
-		UGameplayStatics::PlaySound2D( GetWorld() , ExplosionSound );
+		if (FireAudioComponent)
+		{
+			FireAudioComponent->SetSound(ExplosionSound);
+			FireAudioComponent->Play();
+		}
 	}
 }
 
@@ -118,36 +132,14 @@ void AFireEnemy::StopSequence()
 {
 	GetWorldTimerManager().ClearTimer(ProjectileTimerHandle);
 	GetWorldTimerManager().SetTimer(SequenceTimerHandle, this, &AFireEnemy::StartSequence, 2.0f, false);
+
+	// 사운드 중지
+	if (FireAudioComponent && FireAudioComponent->IsPlaying())
+	{
+		FireAudioComponent->Stop();
+	}
 }
 
-//void AFireEnemy::RotateToPlayer(float DeltaTime)
-//{
-//	if (PlayerPawn)
-//	{
-//		FVector Direction = PlayerPawn->GetActorLocation() - GetActorLocation();
-//		Direction.Z = 0;  // 수평 회전만 하도록 Z축을 0으로 설정
-//
-//		if (!Direction.IsNearlyZero())
-//		{
-//			FRotator TargetRotation = Direction.Rotation();
-//			FRotator CurrentRotation = GetActorRotation();
-//
-//			TargetRotation.Yaw += -90.0f;
-//
-//			FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 2.0f);  // 회전 속도를 조정할 수 있습니다.
-//			SetActorRotation(NewRotation);
-//		}
-//	}
-//}
-
-//void AFireEnemy::OnHit(float Damage)
-//{
-//	Health -= Damage;
-//	if (Health <= 0)
-//	{
-//		Die();
-//	}
-//}
 
 void AFireEnemy::Die()
 {
@@ -166,3 +158,4 @@ void AFireEnemy::UpdateScale(float ScaleValue)
 {
 	FireMesh->SetRelativeScale3D(FVector(ScaleValue));
 }
+
