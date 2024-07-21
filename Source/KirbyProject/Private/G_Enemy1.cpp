@@ -172,7 +172,7 @@ void AG_Enemy1::Die()
 	// 죽을 때 펑 VFX
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SmokeVFX, GetActorLocation());
 
-	Destroy();  // 적을 제거
+	//Destroy();  // 적을 제거
 }
 
 
