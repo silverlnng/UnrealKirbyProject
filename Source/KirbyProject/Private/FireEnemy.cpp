@@ -102,6 +102,9 @@ void AFireEnemy::Fire()
 		{
 			StopSequence();
 		}
+
+		// 발사 소리
+		UGameplayStatics::PlaySound2D( GetWorld() , ExplosionSound );
 	}
 }
 
